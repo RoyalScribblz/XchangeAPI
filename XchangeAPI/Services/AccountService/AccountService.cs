@@ -7,7 +7,7 @@ namespace XchangeAPI.Services.AccountService;
 
 public sealed class AccountService(ILogger<AccountService> logger, ICurrencyService currencyService, XchangeDatabase database) : IAccountService
 {
-    public async Task<bool> Exchange(string userId, double fromAmount, Guid fromCurrencyId, Guid toCurrencyId, CancellationToken cancellationToken)
+    public async Task<bool> Exchange(string userId, double amount, Guid fromCurrencyId, Guid toCurrencyId, CancellationToken cancellationToken)
     {
         double? exchangeRate = await currencyService.GetExchangeRate(fromCurrencyId, toCurrencyId, cancellationToken);
 
@@ -28,18 +28,18 @@ public sealed class AccountService(ILogger<AccountService> logger, ICurrencyServ
             return false;
         }
 
-        double toAmount = fromAmount * (double)exchangeRate;
+        double toAmount = amount * (double)exchangeRate;
         
-        fromAccount.Balance -= fromAmount;
+        fromAccount.Balance -= amount;
         toAccount.Balance += toAmount;
 
         await database.SaveChangesAsync(cancellationToken);
-        await CheckTransferLimit(userId, fromAmount, fromCurrencyId, cancellationToken);
+        await CheckTransactionLimit(userId, amount, fromCurrencyId, cancellationToken);
         
         return true;
     }
     
-    private async Task CheckTransferLimit(string userId, double amount, Guid currencyId, CancellationToken cancellationToken)
+    private async Task CheckTransactionLimit(string userId, double amount, Guid currencyId, CancellationToken cancellationToken)
     {
         var currency = await database.Currencies.SingleOrDefaultAsync(c => c.CurrencyId == currencyId, cancellationToken);
         

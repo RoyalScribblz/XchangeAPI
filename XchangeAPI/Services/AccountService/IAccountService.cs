@@ -6,7 +6,7 @@ public interface IAccountService
 {
     Task<bool> Exchange(
         string userId,
-        double fromAmount,
+        double amount,
         Guid fromCurrencyId,
         Guid toCurrencyId,
         CancellationToken cancellationToken);

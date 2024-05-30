@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using XchangeAPI.Database;
+using XchangeAPI.Database.Dtos;
 using XchangeAPI.Options;
 
 namespace XchangeAPI.Services.CurrencyService;
@@ -15,13 +16,13 @@ public sealed class CurrencyService(
     
     public async Task<double?> GetExchangeRate(Guid fromCurrencyId, Guid toCurrencyId, CancellationToken cancellationToken)
     {
-        await UpdateExchangeRates(cancellationToken);
+        // TODO re-enable rate updating with: await UpdateExchangeRates(cancellationToken);
         
         double? fromValue = (await database.Currencies.SingleOrDefaultAsync(
-            c => c.CurrencyId == fromCurrencyId))?.UsdValue;
+            c => c.CurrencyId == fromCurrencyId, cancellationToken))?.UsdValue;
         
         double? toValue = (await database.Currencies.SingleOrDefaultAsync(
-            c => c.CurrencyId == toCurrencyId))?.UsdValue;
+            c => c.CurrencyId == toCurrencyId, cancellationToken))?.UsdValue;
 
         return fromValue / toValue;
     }
@@ -51,7 +52,25 @@ public sealed class CurrencyService(
 
             await database.SaveChangesAsync(cancellationToken);
         }
-    } 
+    }
+
+    public List<Currency> GetCurrencies() => database.Currencies.ToList();
+
+    public async Task<bool> UpdateTransactionLimit(Guid currencyId, double newLimit, CancellationToken cancellationToken)
+    {
+        var currency = await database.Currencies.SingleOrDefaultAsync(
+            c => c.CurrencyId == currencyId, cancellationToken);
+
+        if (currency == null)
+        {
+            return false;
+        }
+
+        currency.TransactionLimit = newLimit;
+
+        await database.SaveChangesAsync(cancellationToken);
+        return true;
+    }
 }
 
 public class OpenExchangeRatesResponse
