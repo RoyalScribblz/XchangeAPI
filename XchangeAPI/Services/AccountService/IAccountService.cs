@@ -1,4 +1,4 @@
-using XchangeAPI.Database.Dtos;
+using XchangeAPI.Endpoints.Contracts;
 
 namespace XchangeAPI.Services.AccountService;
 
@@ -10,6 +10,9 @@ public interface IAccountService
         Guid fromCurrencyId,
         Guid toCurrencyId,
         CancellationToken cancellationToken);
-    
-    List<Account> GetAccounts(string userId);
+
+    Task<List<GetAccountsResponse>> GetAccounts(
+        string userId, 
+        Guid localCurrencyId,
+        CancellationToken cancellationToken);
 }

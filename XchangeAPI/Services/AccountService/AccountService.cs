@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using XchangeAPI.Database;
 using XchangeAPI.Database.Dtos;
+using XchangeAPI.Endpoints.Contracts;
 using XchangeAPI.Services.CurrencyService;
 
 namespace XchangeAPI.Services.AccountService;
@@ -71,8 +72,36 @@ public sealed class AccountService(ILogger<AccountService> logger, ICurrencyServ
         await database.SaveChangesAsync(cancellationToken);
     }
 
-    public List<Account> GetAccounts(string userId)
+    public async Task<List<GetAccountsResponse>> GetAccounts(string userId, Guid localCurrencyId, CancellationToken cancellationToken)
     {
-        return database.Accounts.Where(a => a.UserId == userId).ToList();
+        var accounts = database.Accounts
+            .Where(a => a.UserId == userId)
+            .Select(a => new GetAccountsResponse
+            {
+                AccountId = a.AccountId,
+                UserId = a.UserId,
+                Currency = database.Currencies
+                    .Where(c => c.CurrencyId == a.CurrencyId)
+                    .Select(c => new LocalCurrency
+                    {
+                        CurrencyId = c.CurrencyId,
+                        Name = c.Name,
+                        CurrencyCode = c.CurrencyCode,
+                        FlagImageUrl = c.FlagImageUrl,
+                        Symbol = c.Symbol,
+                        TransactionLimit = c.TransactionLimit
+                    })
+                    .First(),
+                Balance = a.Balance
+            })
+            .ToList();
+
+        foreach (GetAccountsResponse getAccountsResponse in accounts)
+        {
+            getAccountsResponse.Currency.LocalValue = await currencyService.GetExchangeRate(
+                getAccountsResponse.Currency.CurrencyId, localCurrencyId, cancellationToken) ?? 0;
+        }
+
+        return accounts;
     }
 }

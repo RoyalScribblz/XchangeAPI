@@ -15,6 +15,13 @@ builder.Services
     .AddSwaggerGen()
     .AddDbContext<XchangeDatabase>();
 
+builder.Services.AddCors(options => options.AddPolicy(name: "LocalDev", policy =>
+{
+    policy.SetIsOriginAllowed(origin => new Uri(origin).IsLoopback)
+        .AllowAnyHeader()
+        .AllowAnyMethod();
+}));
+
 List<Currency> currencies = [];
 builder.Configuration.GetSection("Currencies").Bind(currencies);
 
@@ -32,8 +39,9 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwagger()
+        .UseSwaggerUI()
+        .UseCors("LocalDev");
 }
 
 app.UseHttpsRedirection();

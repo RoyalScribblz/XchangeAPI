@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using XchangeAPI.Database.Dtos;
+using XchangeAPI.Endpoints.Contracts;
 using XchangeAPI.Services.AccountService;
 using XchangeAPI.Services.UserService;
 
@@ -10,14 +10,19 @@ public static class AccountEndpointExtensions
 {
     public static WebApplication MapAccountEndpoints(this WebApplication app)
     {
-        app.MapGet("/accounts", ([FromQuery] string userId, IAccountService accountService)
-            => TypedResults.Ok(accountService.GetAccounts(userId)));
+        app.MapGet("/accounts", async (
+            [FromQuery] string userId,
+            Guid? localCurrencyId,
+            CancellationToken cancellationToken,
+            IAccountService accountService) => TypedResults.Ok(await accountService.GetAccounts(userId,
+            localCurrencyId ?? Guid.Parse("6c84631c-838b-403e-8e2b-38614d2e907d"), cancellationToken)));
 
-        app.MapGet("/exchange", async Task<Results<Ok<List<Account>>, BadRequest>>(
+        app.MapGet("/exchange", async Task<Results<Ok<List<GetAccountsResponse>>, BadRequest>>(
             [FromQuery] string userId,
             [FromQuery] double amount,
             [FromQuery] Guid fromCurrencyId,
             [FromQuery] Guid toCurrencyId,
+            Guid? localCurrencyId,
             IAccountService accountService,
             IUserService userService,
             CancellationToken cancellationToken) =>
@@ -31,7 +36,7 @@ public static class AccountEndpointExtensions
 
             if (success)
             {
-                return TypedResults.Ok(accountService.GetAccounts(userId));
+                return TypedResults.Ok(await accountService.GetAccounts(userId, localCurrencyId ?? Guid.Parse("6c84631c-838b-403e-8e2b-38614d2e907d"), cancellationToken));
             }
 
             return TypedResults.BadRequest();
