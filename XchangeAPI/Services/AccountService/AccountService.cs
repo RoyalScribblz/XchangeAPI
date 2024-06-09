@@ -80,26 +80,16 @@ public sealed class AccountService(ILogger<AccountService> logger, ICurrencyServ
             {
                 AccountId = a.AccountId,
                 UserId = a.UserId,
-                Currency = database.Currencies
-                    .Where(c => c.CurrencyId == a.CurrencyId)
-                    .Select(c => new LocalCurrency
-                    {
-                        CurrencyId = c.CurrencyId,
-                        Name = c.Name,
-                        CurrencyCode = c.CurrencyCode,
-                        FlagImageUrl = c.FlagImageUrl,
-                        Symbol = c.Symbol,
-                        TransactionLimit = c.TransactionLimit
-                    })
-                    .First(),
+                Currency = database.Currencies.Single(c => c.CurrencyId == a.CurrencyId),
                 Balance = a.Balance
             })
             .ToList();
 
         foreach (GetAccountsResponse getAccountsResponse in accounts)
         {
-            getAccountsResponse.Currency.LocalValue = await currencyService.GetExchangeRate(
+            var exchangeRate = await currencyService.GetExchangeRate(
                 getAccountsResponse.Currency.CurrencyId, localCurrencyId, cancellationToken) ?? 0;
+            getAccountsResponse.LocalValue = exchangeRate * getAccountsResponse.Balance;
         }
 
         return accounts;

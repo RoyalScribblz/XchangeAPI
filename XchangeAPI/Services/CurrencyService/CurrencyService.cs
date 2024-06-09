@@ -24,7 +24,7 @@ public sealed class CurrencyService(
         double? toValue = (await database.Currencies.SingleOrDefaultAsync(
             c => c.CurrencyId == toCurrencyId, cancellationToken))?.UsdValue;
 
-        return fromValue / toValue;
+        return toValue / fromValue;
     }
 
     private async Task UpdateExchangeRates(CancellationToken cancellationToken)
