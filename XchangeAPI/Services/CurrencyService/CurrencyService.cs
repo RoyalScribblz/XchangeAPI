@@ -71,6 +71,11 @@ public sealed class CurrencyService(
         await database.SaveChangesAsync(cancellationToken);
         return true;
     }
+
+    public Task<Currency> GetCurrency(Guid currencyId, CancellationToken cancellationToken)
+    {
+        return database.Currencies.SingleAsync(c => c.CurrencyId == currencyId, cancellationToken);
+    }
 }
 
 public class OpenExchangeRatesResponse

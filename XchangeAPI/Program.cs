@@ -48,7 +48,8 @@ app.UseHttpsRedirection();
 
 app.MapAccountEndpoints()
     .MapCurrencyEndpoints()
-    .MapEvidenceRequestEndpoints();
+    .MapEvidenceRequestEndpoints()
+    .MapUserEndpoints();
 
 await app.Services.CreateScope().ServiceProvider
     .GetRequiredService<XchangeDatabase>()

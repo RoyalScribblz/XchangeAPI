@@ -9,4 +9,5 @@ public interface ICurrencyService
     List<Currency> GetCurrencies();
 
     Task<bool> UpdateTransactionLimit(Guid currencyId, double newLimit, CancellationToken cancellationToken);
+    Task<Currency> GetCurrency(Guid currencyId, CancellationToken cancellationToken);
 }

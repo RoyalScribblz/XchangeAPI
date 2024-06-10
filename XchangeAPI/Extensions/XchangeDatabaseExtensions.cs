@@ -12,7 +12,7 @@ public static class XchangeDatabaseExtensions
         await database.Users.AddAsync(new User
         {
             UserId = "TestAccount",
-            MainCurrencyId = Guid.Parse("3ca59b04-be8a-4344-90d2-5d78c5009da6"),
+            LocalCurrencyId = Guid.Parse("3ca59b04-be8a-4344-90d2-5d78c5009da6"),
             IsFrozen = false,
             IsBanned = false
         });

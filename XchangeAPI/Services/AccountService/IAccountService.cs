@@ -11,7 +11,7 @@ public interface IAccountService
         Guid toCurrencyId,
         CancellationToken cancellationToken);
 
-    Task<List<GetAccountsResponse>> GetAccounts(
+    Task<List<GetAccountsResponse>> GetAccounts(  // TODO get accounts response out of service
         string userId, 
         Guid localCurrencyId,
         CancellationToken cancellationToken);
