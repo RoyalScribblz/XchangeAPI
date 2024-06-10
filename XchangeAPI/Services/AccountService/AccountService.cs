@@ -6,7 +6,7 @@ using XchangeAPI.Services.CurrencyService;
 
 namespace XchangeAPI.Services.AccountService;
 
-public sealed class AccountService(ILogger<AccountService> logger, ICurrencyService currencyService, XchangeDatabase database) : IAccountService
+public sealed class AccountService(ICurrencyService currencyService, XchangeDatabase database) : IAccountService
 {
     public async Task<bool> Exchange(string userId, double amount, Guid fromCurrencyId, Guid toCurrencyId, CancellationToken cancellationToken)
     {
@@ -72,26 +72,8 @@ public sealed class AccountService(ILogger<AccountService> logger, ICurrencyServ
         await database.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<List<GetAccountsResponse>> GetAccounts(string userId, Guid localCurrencyId, CancellationToken cancellationToken)
+    public List<Account> GetAccounts(string userId)
     {
-        var accounts = database.Accounts
-            .Where(a => a.UserId == userId)
-            .Select(a => new GetAccountsResponse
-            {
-                AccountId = a.AccountId,
-                UserId = a.UserId,
-                Currency = database.Currencies.Single(c => c.CurrencyId == a.CurrencyId),
-                Balance = a.Balance
-            })
-            .ToList();
-
-        foreach (GetAccountsResponse getAccountsResponse in accounts)
-        {
-            var exchangeRate = await currencyService.GetExchangeRate(
-                getAccountsResponse.Currency.CurrencyId, localCurrencyId, cancellationToken) ?? 0;
-            getAccountsResponse.LocalValue = exchangeRate * getAccountsResponse.Balance;
-        }
-
-        return accounts;
+        return database.Accounts.Where(a => a.UserId == userId).ToList();
     }
 }
