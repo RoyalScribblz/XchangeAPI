@@ -40,7 +40,7 @@ public static class AccountEndpointExtensions
             }
             
             return TypedResults.Ok(response);
-        });
+        }).WithTags("Account");
 
         app.MapGet("/exchange", async Task<Results<Ok<List<GetAccountsResponse>>, BadRequest>>(
             [FromQuery] string userId,
@@ -88,7 +88,7 @@ public static class AccountEndpointExtensions
             
             return TypedResults.Ok(response);
 
-        });
+        }).WithTags("Account");
         
         return app;
     }

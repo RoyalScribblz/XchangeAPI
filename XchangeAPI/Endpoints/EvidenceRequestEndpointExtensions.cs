@@ -8,7 +8,7 @@ public static class EvidenceRequestEndpointExtensions
     public static WebApplication MapEvidenceRequestEndpoints(this WebApplication app)
     {
         app.MapGet("/evidenceRequests", (IEvidenceRequestService evidenceRequestService) =>
-            TypedResults.Ok(evidenceRequestService.GetEvidenceRequests()));
+            TypedResults.Ok(evidenceRequestService.GetEvidenceRequests())).WithTags("EvidenceRequest");
 
         app.MapPost("/evidenceRequest/{evidenceRequestId:Guid}/evidence", async (
             Guid evidenceRequestId,
@@ -18,7 +18,7 @@ public static class EvidenceRequestEndpointExtensions
         {
             await evidenceRequestService.SubmitEvidence(evidenceRequestId, value, cancellationToken);
             return TypedResults.Ok();
-        });
+        }).WithTags("EvidenceRequest");
 
         app.MapPost("/evidenceRequest/{evidenceRequestId:Guid}/accept", async (
             Guid evidenceRequestId,
@@ -27,7 +27,7 @@ public static class EvidenceRequestEndpointExtensions
         {
             await evidenceRequestService.AcceptEvidence(evidenceRequestId, cancellationToken);
             return TypedResults.Ok();
-        });
+        }).WithTags("EvidenceRequest");
         
         app.MapPost("/evidenceRequest/{evidenceRequestId:Guid}/reject", async (
             Guid evidenceRequestId,
@@ -36,7 +36,7 @@ public static class EvidenceRequestEndpointExtensions
         {
             await evidenceRequestService.RejectEvidence(evidenceRequestId, cancellationToken);
             return TypedResults.Ok();
-        });
+        }).WithTags("EvidenceRequest");
         
         return app;
     }

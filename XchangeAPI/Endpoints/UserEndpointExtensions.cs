@@ -10,6 +10,16 @@ public static class UserEndpointExtensions
 {
     public static WebApplication MapUserEndpoints(this WebApplication app)
     {
+        app.MapPost("/user", async (
+            string userId,
+            CancellationToken cancellationToken,
+            IUserService userService) =>
+        {
+            var user = await userService.CreateUser(userId, cancellationToken);
+
+            return TypedResults.Ok(user);
+        }).WithTags("User");
+        
         app.MapGet("/user/{userId}", async Task<Results<NotFound, Ok<GetUserResponse>>>(
             string userId,
             IUserService userService,
@@ -34,16 +44,16 @@ public static class UserEndpointExtensions
             };
 
             return TypedResults.Ok(response);
-        });
+        }).WithTags("User");
 
-        app.MapPut("/user/{userId}/localCurrency", (
+        app.MapPatch("/user/{userId}/localCurrency", (
             string userId,
             [FromQuery] Guid currencyId,
             IUserService userService,
             CancellationToken cancellationToken) =>
         {
             userService.UpdateLocalCurrency(userId, currencyId, cancellationToken);
-        });
+        }).WithTags("User");
         
         return app;
     }
