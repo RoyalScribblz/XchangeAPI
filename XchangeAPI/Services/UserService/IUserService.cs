@@ -7,5 +7,5 @@ public interface IUserService
     Task<User> CreateUser(string userId, CancellationToken cancellationToken);
     Task<User?> GetUser(string userId, CancellationToken cancellationToken);
     Task<bool> IsFrozen(string userId, CancellationToken cancellationToken);
-    Task UpdateLocalCurrency(string userId, Guid currencyId, CancellationToken cancellationToken);
+    Task<Currency?> UpdateLocalCurrency(string userId, Guid currencyId, CancellationToken cancellationToken);
 }

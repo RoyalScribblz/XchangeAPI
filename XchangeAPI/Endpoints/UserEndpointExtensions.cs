@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using XchangeAPI.Database.Dtos;
 using XchangeAPI.Endpoints.Contracts;
 using XchangeAPI.Services.CurrencyService;
 using XchangeAPI.Services.UserService;
@@ -13,11 +14,22 @@ public static class UserEndpointExtensions
         app.MapPost("/user", async (
             string userId,
             CancellationToken cancellationToken,
-            IUserService userService) =>
+            IUserService userService,
+            ICurrencyService currencyService) =>
         {
             var user = await userService.CreateUser(userId, cancellationToken);
 
-            return TypedResults.Ok(user);
+            var currency = await currencyService.GetCurrency(user.LocalCurrencyId, cancellationToken);
+
+            var response = new GetUserResponse
+            {
+                UserId = user.UserId,
+                LocalCurrency = currency,
+                IsFrozen = user.IsFrozen,
+                IsBanned = user.IsBanned
+            };
+
+            return TypedResults.Ok(response);
         }).WithTags("User");
         
         app.MapGet("/user/{userId}", async Task<Results<NotFound, Ok<GetUserResponse>>>(
@@ -46,13 +58,20 @@ public static class UserEndpointExtensions
             return TypedResults.Ok(response);
         }).WithTags("User");
 
-        app.MapPatch("/user/{userId}/localCurrency", (
+        app.MapPatch("/user/{userId}/localCurrency", async Task<Results<BadRequest, Ok<Currency>>>(
             string userId,
             [FromQuery] Guid currencyId,
             IUserService userService,
             CancellationToken cancellationToken) =>
         {
-            userService.UpdateLocalCurrency(userId, currencyId, cancellationToken);
+            var currency = await userService.UpdateLocalCurrency(userId, currencyId, cancellationToken);
+
+            if (currency == null)
+            {
+                return TypedResults.BadRequest();
+            }
+
+            return TypedResults.Ok(currency);
         }).WithTags("User");
         
         return app;

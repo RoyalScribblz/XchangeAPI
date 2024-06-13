@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using XchangeAPI.Database;
 using XchangeAPI.Database.Dtos;
+using XchangeAPI.Services.CurrencyService;
 
 namespace XchangeAPI.Services.UserService;
 
-public sealed class UserService(XchangeDatabase database) : IUserService
+public sealed class UserService(XchangeDatabase database, ICurrencyService currencyService) : IUserService
 {
     public async Task<User> CreateUser(string userId, CancellationToken cancellationToken)
     {
@@ -34,17 +35,19 @@ public sealed class UserService(XchangeDatabase database) : IUserService
         return user is { IsFrozen: true };
     }
 
-    public async Task UpdateLocalCurrency(string userId, Guid currencyId, CancellationToken cancellationToken)
+    public async Task<Currency?> UpdateLocalCurrency(string userId, Guid currencyId, CancellationToken cancellationToken)
     {
         var user = await database.Users.SingleOrDefaultAsync(u => u.UserId == userId, cancellationToken);
 
         if (user == null)
         {
-            return;
+            return null;
         }
 
         user.LocalCurrencyId = currencyId;
 
         await database.SaveChangesAsync(cancellationToken);
+
+        return await currencyService.GetCurrency(currencyId, cancellationToken);
     }
 }
