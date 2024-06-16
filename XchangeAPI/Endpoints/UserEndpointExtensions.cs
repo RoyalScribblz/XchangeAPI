@@ -73,6 +73,9 @@ public static class UserEndpointExtensions
 
             return TypedResults.Ok(currency);
         }).WithTags("User");
+
+        app.MapGet("/users", (IUserService userService) =>
+            TypedResults.Ok(userService.GetUsers())).WithTags("User");
         
         return app;
     }

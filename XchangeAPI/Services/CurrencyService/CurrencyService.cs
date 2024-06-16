@@ -12,16 +12,16 @@ public sealed class CurrencyService(
     IHttpClientFactory httpClientFactory)
     : ICurrencyService
 {
-    private static DateTime _lastRefreshedTime;
-    
+    private static DateTime lastRefreshedTime;
+
     public async Task<double?> GetExchangeRate(Guid fromCurrencyId, Guid toCurrencyId, CancellationToken cancellationToken)
     {
         // TODO re-enable rate updating with: await UpdateExchangeRates(cancellationToken);
-        
-        double? fromValue = (await database.Currencies.SingleOrDefaultAsync(
+
+        var fromValue = (await database.Currencies.SingleOrDefaultAsync(
             c => c.CurrencyId == fromCurrencyId, cancellationToken))?.UsdValue;
-        
-        double? toValue = (await database.Currencies.SingleOrDefaultAsync(
+
+        var toValue = (await database.Currencies.SingleOrDefaultAsync(
             c => c.CurrencyId == toCurrencyId, cancellationToken))?.UsdValue;
 
         return toValue / fromValue;
@@ -29,11 +29,11 @@ public sealed class CurrencyService(
 
     private async Task UpdateExchangeRates(CancellationToken cancellationToken)
     {
-        var httpClient = httpClientFactory.CreateClient();
-        
-        if (_lastRefreshedTime.AddMinutes(1) < DateTime.UtcNow)
+        using var httpClient = httpClientFactory.CreateClient();
+
+        if (lastRefreshedTime.AddMinutes(1) < DateTime.UtcNow)
         {
-            _lastRefreshedTime = DateTime.UtcNow;
+            lastRefreshedTime = DateTime.UtcNow;
             var exchangeRatesResponse = await httpClient.GetFromJsonAsync<OpenExchangeRatesResponse>(
                 $"https://openexchangerates.org/api/latest.json?app_id={openExchangeRatesOptions.Value.ApiKey}",
                 cancellationToken);
@@ -54,7 +54,7 @@ public sealed class CurrencyService(
         }
     }
 
-    public List<Currency> GetCurrencies() => database.Currencies.ToList();
+    public IList<Currency> GetCurrencies() => database.Currencies.ToList();
 
     public async Task<bool> UpdateTransactionLimit(Guid currencyId, double newLimit, CancellationToken cancellationToken)
     {
@@ -80,5 +80,5 @@ public sealed class CurrencyService(
 
 public class OpenExchangeRatesResponse
 {
-    public Dictionary<string, double> Rates { get; set; } = new();
+    public Dictionary<string, double> Rates { get; } = new();
 }

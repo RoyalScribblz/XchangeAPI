@@ -19,6 +19,8 @@ public sealed class UserService(XchangeDatabase database, ICurrencyService curre
 
         await database.Users.AddAsync(user, cancellationToken);
 
+        await database.SaveChangesAsync(cancellationToken);
+        
         return user;
     }
     
@@ -49,5 +51,10 @@ public sealed class UserService(XchangeDatabase database, ICurrencyService curre
         await database.SaveChangesAsync(cancellationToken);
 
         return await currencyService.GetCurrency(currencyId, cancellationToken);
+    }
+
+    public IList<User> GetUsers()
+    {
+        return database.Users.ToList();
     }
 }

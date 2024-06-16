@@ -15,12 +15,15 @@ builder.Services
     .AddSwaggerGen()
     .AddDbContext<XchangeDatabase>();
 
-builder.Services.AddCors(options => options.AddPolicy(name: "LocalDev", policy =>
-{
-    policy.SetIsOriginAllowed(origin => new Uri(origin).IsLoopback)
-        .AllowAnyHeader()
-        .AllowAnyMethod();
-}));
+builder.Services.AddCors(
+    options => options.AddPolicy(
+        name: "LocalDev",
+        policy =>
+        {
+            policy.SetIsOriginAllowed(origin => new Uri(origin).IsLoopback)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }));
 
 List<Currency> currencies = [];
 builder.Configuration.GetSection("Currencies").Bind(currencies);
@@ -51,8 +54,9 @@ app.MapAccountEndpoints()
     .MapEvidenceRequestEndpoints()
     .MapUserEndpoints();
 
-await app.Services.CreateScope().ServiceProvider
+using var scope = app.Services.CreateScope();
+await scope.ServiceProvider
     .GetRequiredService<XchangeDatabase>()
     .Seed(currencies);
 
-app.Run();
+await app.RunAsync();

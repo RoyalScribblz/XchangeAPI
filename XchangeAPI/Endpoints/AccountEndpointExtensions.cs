@@ -11,13 +11,21 @@ public static class AccountEndpointExtensions
 {
     public static WebApplication MapAccountEndpoints(this WebApplication app)
     {
-        app.MapGet("/accounts", async (
+        app.MapGet("/accounts", async Task<Results<BadRequest, Ok<List<GetAccountsResponse>>>>(
             [FromQuery] string userId,
-            Guid? localCurrencyId,
             CancellationToken cancellationToken,
             IAccountService accountService,
-            ICurrencyService currencyService) =>
+            ICurrencyService currencyService,
+            IUserService userService) =>
         {
+            var user = await userService.GetUser(userId, cancellationToken);
+
+            if (user == null)
+            {
+                return TypedResults.BadRequest();
+            }
+            
+            
             var accounts = accountService.GetAccounts(userId);
             var response = new List<GetAccountsResponse>();
             
@@ -26,7 +34,7 @@ public static class AccountEndpointExtensions
                 var currency = await currencyService.GetCurrency(account.CurrencyId, cancellationToken);
                 var exchangeRate = await currencyService.GetExchangeRate(
                     currency.CurrencyId,
-                    Guid.Parse("6c84631c-838b-403e-8e2b-38614d2e907d"),  // TODO get from authed user
+                    user.LocalCurrencyId,
                     cancellationToken) ?? 0;
                 
                 response.Add(new GetAccountsResponse

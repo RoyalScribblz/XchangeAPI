@@ -10,6 +10,6 @@ public interface IAccountService
         Guid fromCurrencyId,
         Guid toCurrencyId,
         CancellationToken cancellationToken);
-    
-    List<Account> GetAccounts(string userId);
+
+    IList<Account> GetAccounts(string userId);
 }
