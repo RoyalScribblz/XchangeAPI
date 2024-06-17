@@ -28,7 +28,7 @@ public static class EvidenceRequestEndpointExtensions
             await evidenceRequestService.AcceptEvidence(evidenceRequestId, cancellationToken);
             return TypedResults.Ok();
         }).WithTags("EvidenceRequest");
-        
+
         app.MapPost("/evidenceRequest/{evidenceRequestId:Guid}/reject", async (
             Guid evidenceRequestId,
             IEvidenceRequestService evidenceRequestService,
@@ -37,7 +37,7 @@ public static class EvidenceRequestEndpointExtensions
             await evidenceRequestService.RejectEvidence(evidenceRequestId, cancellationToken);
             return TypedResults.Ok();
         }).WithTags("EvidenceRequest");
-        
+
         return app;
     }
 }

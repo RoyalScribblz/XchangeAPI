@@ -4,7 +4,7 @@ namespace XchangeAPI.Services.EvidenceRequestService;
 
 public interface IEvidenceRequestService
 {
-    List<EvidenceRequest> GetEvidenceRequests();
+    IList<EvidenceRequest> GetEvidenceRequests();
 
     Task SubmitEvidence(Guid evidenceRequestId, string evidence, CancellationToken cancellationToken);
 

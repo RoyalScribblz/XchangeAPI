@@ -6,7 +6,7 @@ namespace XchangeAPI.Services.EvidenceRequestService;
 
 public sealed class EvidenceRequestService(XchangeDatabase database) : IEvidenceRequestService
 {
-    public List<EvidenceRequest> GetEvidenceRequests() => database.EvidenceRequests.ToList();
+    public IList<EvidenceRequest> GetEvidenceRequests() => database.EvidenceRequests.ToList();
 
     public async Task SubmitEvidence(Guid evidenceRequestId, string evidence, CancellationToken cancellationToken)
     {
@@ -17,7 +17,7 @@ public sealed class EvidenceRequestService(XchangeDatabase database) : IEvidence
         {
             return;
         }
-        
+
         evidenceRequest.Evidence = evidence;
 
         await database.SaveChangesAsync(cancellationToken);
@@ -47,7 +47,7 @@ public sealed class EvidenceRequestService(XchangeDatabase database) : IEvidence
 
         await database.SaveChangesAsync(cancellationToken);
     }
-    
+
     public async Task RejectEvidence(Guid evidenceRequestId, CancellationToken cancellationToken)
     {
         var evidenceRequest = await database.EvidenceRequests.SingleOrDefaultAsync(

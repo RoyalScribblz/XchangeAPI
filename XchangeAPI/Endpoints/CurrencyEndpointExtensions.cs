@@ -19,7 +19,7 @@ public static class CurrencyEndpointExtensions
             await currencyService.UpdateTransactionLimit(currencyId, amount, cancellationToken);
             return TypedResults.Ok();
         }).WithTags("Currency");
-        
+
         return app;
     }
 }

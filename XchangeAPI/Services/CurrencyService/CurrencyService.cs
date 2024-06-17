@@ -80,5 +80,5 @@ public sealed class CurrencyService(
 
 public class OpenExchangeRatesResponse
 {
-    public Dictionary<string, double> Rates { get; } = new();
+    public Dictionary<string, double> Rates { get; } = [];
 }

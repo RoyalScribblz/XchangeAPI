@@ -26,12 +26,12 @@ public static class UserEndpointExtensions
                 UserId = user.UserId,
                 LocalCurrency = currency,
                 IsFrozen = user.IsFrozen,
-                IsBanned = user.IsBanned
+                IsBanned = user.IsBanned,
             };
 
             return TypedResults.Ok(response);
         }).WithTags("User");
-        
+
         app.MapGet("/user/{userId}", async Task<Results<NotFound, Ok<GetUserResponse>>>(
             string userId,
             IUserService userService,
@@ -52,7 +52,7 @@ public static class UserEndpointExtensions
                 UserId = user.UserId,
                 LocalCurrency = currency,
                 IsFrozen = user.IsFrozen,
-                IsBanned = user.IsBanned
+                IsBanned = user.IsBanned,
             };
 
             return TypedResults.Ok(response);
@@ -76,7 +76,7 @@ public static class UserEndpointExtensions
 
         app.MapGet("/users", (IUserService userService) =>
             TypedResults.Ok(userService.GetUsers())).WithTags("User");
-        
+
         return app;
     }
 }
