@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using XchangeAPI.Database;
 using XchangeAPI.Database.Dtos;
 using XchangeAPI.Services.CurrencyService;
@@ -77,5 +78,39 @@ public sealed class AccountService(ICurrencyService currencyService, XchangeData
     public IList<Account> GetAccounts(string userId)
     {
         return database.Accounts.Where(a => a.UserId == userId).ToList();
+    }
+
+    public async Task<Account?> Deposit(Guid accountId, double amount, CancellationToken cancellationToken)
+    {
+        var account = await database.Accounts.SingleOrDefaultAsync(
+            a => a.AccountId == accountId, cancellationToken);
+
+        if (account == null)
+        {
+            return null;
+        }
+
+        account.Balance += amount;
+
+        await database.SaveChangesAsync(cancellationToken);
+
+        return account;
+    }
+    
+    public async Task<Account?> Withdraw(Guid accountId, double amount, CancellationToken cancellationToken)
+    {
+        var account = await database.Accounts.SingleOrDefaultAsync(
+            a => a.AccountId == accountId, cancellationToken);
+
+        if (account == null)
+        {
+            return null;
+        }
+
+        account.Balance -= amount;
+
+        await database.SaveChangesAsync(cancellationToken);
+
+        return account;
     }
 }

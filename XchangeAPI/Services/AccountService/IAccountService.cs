@@ -12,4 +12,9 @@ public interface IAccountService
         CancellationToken cancellationToken);
 
     IList<Account> GetAccounts(string userId);
+
+    Task<Account?> Deposit(Guid accountId, double amount, CancellationToken cancellationToken);
+    
+    Task<Account?> Withdraw(Guid accountId, double amount, CancellationToken cancellationToken);
+
 }

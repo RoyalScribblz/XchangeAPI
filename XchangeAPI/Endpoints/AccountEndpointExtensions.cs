@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using XchangeAPI.Database.Dtos;
 using XchangeAPI.Endpoints.Contracts;
 using XchangeAPI.Services.AccountService;
 using XchangeAPI.Services.CurrencyService;
@@ -96,6 +97,80 @@ public static class AccountEndpointExtensions
             return TypedResults.Ok(response);
         }).WithTags("Account");
 
+        app.MapPatch("/account/{accountId:Guid}/deposit", async Task<Results<BadRequest, Ok<GetAccountsResponse>>>(
+            Guid accountId,
+            [FromQuery] double amount,
+            IAccountService accountService,
+            ICurrencyService currencyService,
+            IUserService userService,
+            CancellationToken cancellationToken) =>
+        {
+            var account = await accountService.Deposit(accountId, amount, cancellationToken);
+
+            if (account == null)
+            {
+                return TypedResults.BadRequest();
+            }
+
+            var user = await userService.GetUser(account.UserId, cancellationToken);
+
+            if (user == null)
+            {
+                return TypedResults.BadRequest();
+            }
+            
+            var currency = await currencyService.GetCurrency(account.CurrencyId, cancellationToken);
+            
+            var exchangeRate = await currencyService.GetExchangeRate(
+                currency.CurrencyId, user.LocalCurrencyId, cancellationToken) ?? 0;
+
+            return TypedResults.Ok(new GetAccountsResponse
+            {
+                AccountId = account.AccountId,
+                UserId = account.UserId,
+                Currency = currency,
+                Balance = account.Balance,
+                LocalValue = exchangeRate * account.Balance,
+            });
+        });
+
+        app.MapPatch("/account/{accountId:Guid}/withdraw", async Task<Results<BadRequest, Ok<GetAccountsResponse>>>(
+            Guid accountId,
+            [FromQuery] double amount,
+            IAccountService accountService,
+            ICurrencyService currencyService,
+            IUserService userService,
+            CancellationToken cancellationToken) =>
+        {
+            var account = await accountService.Withdraw(accountId, amount, cancellationToken);
+
+            if (account == null)
+            {
+                return TypedResults.BadRequest();
+            }
+
+            var user = await userService.GetUser(account.UserId, cancellationToken);
+
+            if (user == null)
+            {
+                return TypedResults.BadRequest();
+            }
+            
+            var currency = await currencyService.GetCurrency(account.CurrencyId, cancellationToken);
+            
+            var exchangeRate = await currencyService.GetExchangeRate(
+                currency.CurrencyId, user.LocalCurrencyId, cancellationToken) ?? 0;
+
+            return TypedResults.Ok(new GetAccountsResponse
+            {
+                AccountId = account.AccountId,
+                UserId = account.UserId,
+                Currency = currency,
+                Balance = account.Balance,
+                LocalValue = exchangeRate * account.Balance,
+            });
+        });
+        
         return app;
     }
 }
