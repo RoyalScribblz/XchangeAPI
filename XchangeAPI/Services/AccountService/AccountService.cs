@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging.Abstractions;
 using XchangeAPI.Database;
 using XchangeAPI.Database.Dtos;
 using XchangeAPI.Services.CurrencyService;
@@ -8,6 +7,28 @@ namespace XchangeAPI.Services.AccountService;
 
 public sealed class AccountService(ICurrencyService currencyService, XchangeDatabase database) : IAccountService
 {
+    public async Task<Account?> Create(string userId, Guid currencyId, CancellationToken cancellationToken)
+    {
+        if (await database.Accounts.AnyAsync(a => a.UserId == userId && a.CurrencyId == currencyId, cancellationToken))
+        {
+            return null;
+        }
+
+        var account = new Account
+        {
+            AccountId = Guid.NewGuid(),
+            UserId = userId,
+            CurrencyId = currencyId,
+            Balance = 0
+        };
+
+        await database.Accounts.AddAsync(account, cancellationToken);
+
+        await database.SaveChangesAsync(cancellationToken);
+
+        return account;
+    }
+
     public async Task<bool> Exchange(string userId, double amount, Guid fromCurrencyId, Guid toCurrencyId, CancellationToken cancellationToken)
     {
         var exchangeRate = await currencyService.GetExchangeRate(fromCurrencyId, toCurrencyId, cancellationToken);

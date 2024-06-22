@@ -4,6 +4,8 @@ namespace XchangeAPI.Services.AccountService;
 
 public interface IAccountService
 {
+    Task<Account?> Create(string userId, Guid currencyId, CancellationToken cancellationToken);
+    
     Task<bool> Exchange(
         string userId,
         double amount,
