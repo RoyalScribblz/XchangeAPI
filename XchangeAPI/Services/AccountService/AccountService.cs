@@ -40,9 +40,16 @@ public sealed class AccountService(
             a => a.UserId == userId && a.CurrencyId == pendingExchange.ToCurrencyId,
             cancellationToken);
 
-        if (fromAccount == null || toAccount == null)
+        if (fromAccount == null)
         {
-            return false;  // TODO consider creating the toAccount if it doesn't exist
+            return false;
+        }
+
+        toAccount ??= await Create(userId, pendingExchange.ToCurrencyId, cancellationToken);
+
+        if (toAccount == null)
+        {
+            return false;
         }
         
         fromAccount.Balance -= pendingExchange.FromAmount;
