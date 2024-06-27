@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using XchangeAPI.Database;
 using XchangeAPI.Database.Dtos;
-using XchangeAPI.Services.CurrencyService;
+using XchangeAPI.Services.PendingExchangeService.Models;
 
 namespace XchangeAPI.Services.AccountService;
 
-public sealed class AccountService(ICurrencyService currencyService, XchangeDatabase database) : IAccountService
+public sealed class AccountService(
+    XchangeDatabase database) : IAccountService
 {
     public async Task<Account?> Create(string userId, Guid currencyId, CancellationToken cancellationToken)
     {
@@ -29,35 +30,26 @@ public sealed class AccountService(ICurrencyService currencyService, XchangeData
         return account;
     }
 
-    public async Task<bool> Exchange(string userId, double amount, Guid fromCurrencyId, Guid toCurrencyId, CancellationToken cancellationToken)
+    public async Task<bool> CompleteExchange(string userId, PendingExchange pendingExchange, CancellationToken cancellationToken)
     {
-        var exchangeRate = await currencyService.GetExchangeRate(fromCurrencyId, toCurrencyId, cancellationToken);
-
-        if (exchangeRate == null)
-        {
-            return false;
-        }
-
         var fromAccount = await database.Accounts.SingleOrDefaultAsync(
-            a => a.UserId == userId && a.CurrencyId == fromCurrencyId,
+            a => a.UserId == userId && a.CurrencyId == pendingExchange.FromCurrencyId,
             cancellationToken);
 
         var toAccount = await database.Accounts.SingleOrDefaultAsync(
-            a => a.UserId == userId && a.CurrencyId == toCurrencyId,
+            a => a.UserId == userId && a.CurrencyId == pendingExchange.ToCurrencyId,
             cancellationToken);
 
         if (fromAccount == null || toAccount == null)
         {
-            return false;
+            return false;  // TODO consider creating the toAccount if it doesn't exist
         }
-
-        var toAmount = amount * (double)exchangeRate;
-
-        fromAccount.Balance -= amount;
-        toAccount.Balance += toAmount;
-
+        
+        fromAccount.Balance -= pendingExchange.FromAmount;
+        toAccount.Balance += pendingExchange.ToAmount;
+        
         await database.SaveChangesAsync(cancellationToken);
-        await CheckTransactionLimit(userId, amount, fromCurrencyId, cancellationToken);
+        await CheckTransactionLimit(userId, pendingExchange.FromAmount, pendingExchange.FromCurrencyId, cancellationToken);
 
         return true;
     }

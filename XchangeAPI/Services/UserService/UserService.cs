@@ -57,4 +57,11 @@ public sealed class UserService(XchangeDatabase database, ICurrencyService curre
     {
         return database.Users.ToList();
     }
+
+    public async Task<Guid> GetLocalCurrencyId(string userId, CancellationToken cancellationToken)
+    {
+        var user = await database.Users.SingleOrDefaultAsync(u => u.UserId == userId, cancellationToken);
+
+        return user?.LocalCurrencyId ?? Guid.Empty;
+    }
 }

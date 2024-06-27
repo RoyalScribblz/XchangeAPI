@@ -4,6 +4,8 @@ using XchangeAPI.Database.Dtos;
 using XchangeAPI.Endpoints.Contracts;
 using XchangeAPI.Services.AccountService;
 using XchangeAPI.Services.CurrencyService;
+using XchangeAPI.Services.PendingExchangeService;
+using XchangeAPI.Services.PendingExchangeService.Models;
 using XchangeAPI.Services.UserService;
 
 namespace XchangeAPI.Endpoints;
@@ -87,15 +89,47 @@ public static class AccountEndpointExtensions
             return TypedResults.Ok(response);
         }).WithTags("Account");
 
-        app.MapGet("/exchange", async Task<Results<Ok<List<GetAccountsResponse>>, BadRequest>>(
+        app.MapPost("/exchange/create", async Task<Results<Ok<PendingExchange>, BadRequest>>(
             [FromQuery] string userId,
             [FromQuery] double amount,
             [FromQuery] Guid fromCurrencyId,
             [FromQuery] Guid toCurrencyId,
-            Guid? localCurrencyId,
+            IUserService userService,
+            ICurrencyService currencyService,
+            IPendingExchangeService pendingExchangeService,
+            CancellationToken cancellationToken) =>
+        {
+            if (await userService.IsFrozen(userId, cancellationToken))
+            {
+                return TypedResults.BadRequest();
+            }
+            
+            var exchangeRate = await currencyService.GetExchangeRate(fromCurrencyId, toCurrencyId, cancellationToken);
+
+            if (exchangeRate == null)
+            {
+                return TypedResults.BadRequest();
+            }
+
+            var toAmount = amount * (double)exchangeRate;
+
+            var pendingExchange = pendingExchangeService.Create(userId, fromCurrencyId, amount, toCurrencyId, toAmount);
+
+            if (pendingExchange == null)
+            {
+                return TypedResults.BadRequest();
+            }
+
+            return TypedResults.Ok(pendingExchange);
+        }).WithTags("Account");
+        
+        app.MapPost("/exchange/complete/{pendingExchangeId:guid}", async Task<Results<Ok<List<GetAccountsResponse>>, BadRequest>>(
+            Guid pendingExchangeId,
+            [FromQuery] string userId,
             IAccountService accountService,
             IUserService userService,
             ICurrencyService currencyService,
+            IPendingExchangeService pendingExchangeService,
             CancellationToken cancellationToken) =>
         {
             if (await userService.IsFrozen(userId, cancellationToken))
@@ -103,22 +137,38 @@ public static class AccountEndpointExtensions
                 return TypedResults.BadRequest();
             }
 
-            var success = await accountService.Exchange(userId, amount, fromCurrencyId, toCurrencyId, cancellationToken);
+            var pendingExchange = pendingExchangeService.Get(userId, pendingExchangeId);
+
+            if (pendingExchange == null)
+            {
+                return TypedResults.BadRequest();
+            }
+
+            var success = await accountService.CompleteExchange(userId, pendingExchange, cancellationToken);
 
             if (!success)
             {
                 return TypedResults.BadRequest();
             }
 
+            pendingExchangeService.Remove(userId);
+
             var accounts = accountService.GetAccounts(userId);
             var response = new List<GetAccountsResponse>();
 
+            var localCurrencyId = await userService.GetLocalCurrencyId(userId, cancellationToken);
+
+            if (localCurrencyId == Guid.Empty)
+            {
+                return TypedResults.BadRequest();
+            }
+            
             foreach (var account in accounts)
             {
                 var currency = await currencyService.GetCurrency(account.CurrencyId, cancellationToken);
                 var exchangeRate = await currencyService.GetExchangeRate(
                     currency.CurrencyId,
-                    localCurrencyId ?? Guid.Parse("6c84631c-838b-403e-8e2b-38614d2e907d"),
+                    localCurrencyId,
                     cancellationToken) ?? 0;
 
                 response.Add(new GetAccountsResponse
@@ -169,7 +219,7 @@ public static class AccountEndpointExtensions
                 Balance = account.Balance,
                 LocalValue = exchangeRate * account.Balance,
             });
-        });
+        }).WithTags("Account");
 
         app.MapPatch("/account/{accountId:Guid}/withdraw", async Task<Results<BadRequest, Ok<GetAccountsResponse>>>(
             Guid accountId,
@@ -206,7 +256,7 @@ public static class AccountEndpointExtensions
                 Balance = account.Balance,
                 LocalValue = exchangeRate * account.Balance,
             });
-        });
+        }).WithTags("Account");
         
         return app;
     }

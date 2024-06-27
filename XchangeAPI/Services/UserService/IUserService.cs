@@ -9,4 +9,5 @@ public interface IUserService
     Task<bool> IsFrozen(string userId, CancellationToken cancellationToken);
     Task<Currency?> UpdateLocalCurrency(string userId, Guid currencyId, CancellationToken cancellationToken);
     IList<User> GetUsers();
+    Task<Guid> GetLocalCurrencyId(string userId, CancellationToken cancellationToken);
 }

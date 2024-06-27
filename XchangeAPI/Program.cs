@@ -6,6 +6,7 @@ using XchangeAPI.Options;
 using XchangeAPI.Services.AccountService;
 using XchangeAPI.Services.CurrencyService;
 using XchangeAPI.Services.EvidenceRequestService;
+using XchangeAPI.Services.PendingExchangeService;
 using XchangeAPI.Services.UserService;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +36,7 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 builder.Services.AddScoped<IEvidenceRequestService, EvidenceRequestService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddSingleton<IPendingExchangeService, PendingExchangeService>();
 
 builder.Services.AddHttpClient<CurrencyService>();
 
