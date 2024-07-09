@@ -4,17 +4,16 @@ using XchangeAPI.Enums;
 
 namespace XchangeAPI.Services.StorageBucketSetupService;
 
-public class StorageBucketSetupService(IMinioClientFactory minioClientFactory, ILogger<StorageBucketSetupService> logger) : IHostedService, IDisposable
+public class StorageBucketSetupService(IMinioClientFactory minioClientFactory, ILogger<StorageBucketSetupService> logger) : IHostedService
 {
-    private readonly IMinioClient _minioClient = minioClientFactory.CreateClient();
-    
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        using var minioClient = minioClientFactory.CreateClient();
         try
         {
             var bucketExistsArgs = new BucketExistsArgs().WithBucket(Buckets.Xchange);
             
-            var bucketExists = await _minioClient.BucketExistsAsync(bucketExistsArgs, cancellationToken);
+            var bucketExists = await minioClient.BucketExistsAsync(bucketExistsArgs, cancellationToken);
 
             if (bucketExists)
             {
@@ -24,7 +23,7 @@ public class StorageBucketSetupService(IMinioClientFactory minioClientFactory, I
 
             var makeBucketArgs = new MakeBucketArgs().WithBucket(Buckets.Xchange);
 
-            await _minioClient.MakeBucketAsync(makeBucketArgs, cancellationToken);
+            await minioClient.MakeBucketAsync(makeBucketArgs, cancellationToken);
             
             logger.LogInformation("Successfully created storage bucket: {BucketName}", Buckets.Xchange);
         }
@@ -37,11 +36,5 @@ public class StorageBucketSetupService(IMinioClientFactory minioClientFactory, I
     public Task StopAsync(CancellationToken cancellationToken)
     {
         return Task.CompletedTask;
-    }
-
-    public void Dispose()
-    {
-        _minioClient.Dispose();
-        GC.SuppressFinalize(this);
     }
 }

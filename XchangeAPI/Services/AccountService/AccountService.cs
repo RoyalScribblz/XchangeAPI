@@ -87,7 +87,7 @@ public sealed class AccountService(
             {
                 EvidenceRequestId = Guid.NewGuid(),
                 UserId = userId,
-                Evidence = string.Empty,
+                EvidenceIds = [],
                 Status = EvidenceRequestStatus.Active,
             },
             cancellationToken);

@@ -58,6 +58,14 @@ public static class XchangeDatabaseExtensions
                 Balance = 100.00,
             });
 
+        await database.EvidenceRequests.AddAsync(new EvidenceRequest
+        {
+            EvidenceRequestId = Guid.NewGuid(),
+            UserId = "auth0|65cf6dac8b7a7cb0b5f26732",
+            EvidenceIds = [],
+            Status = EvidenceRequestStatus.Active,
+        });
+
         await database.SaveChangesAsync();
     }
 }

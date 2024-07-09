@@ -6,7 +6,10 @@ public interface IEvidenceRequestService
 {
     IList<EvidenceRequest> GetEvidenceRequests();
 
-    Task SubmitEvidence(Guid evidenceRequestId, string evidence, CancellationToken cancellationToken);
+    Task<EvidenceRequest?> GetEvidenceRequest(string userId, CancellationToken cancellationToken);
+    Task<EvidenceRequest?> GetEvidenceRequest(Guid evidenceRequestId, CancellationToken cancellationToken);
+
+    Task SubmitEvidence(Guid evidenceRequestId, Guid evidenceId, CancellationToken cancellationToken);
 
     Task AcceptEvidence(Guid evidenceRequestId, CancellationToken cancellationToken);
 

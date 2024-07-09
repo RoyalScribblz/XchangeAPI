@@ -1,4 +1,3 @@
-using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using XchangeAPI.Services.StorageBucketService;
 
@@ -13,9 +12,7 @@ public static class TestEndpointExtensions
             CancellationToken cancellationToken,
             IStorageBucketService storageBucketService) =>
         {
-            var id = Guid.NewGuid().ToString();
-
-            await storageBucketService.Put(id, file.OpenReadStream(), file.ContentType, cancellationToken);
+            var id = await storageBucketService.Put(file.OpenReadStream(), file.ContentType, cancellationToken);
 
             return TypedResults.Ok(id);
         }).WithTags("Bucket").DisableAntiforgery();  // TODO re-enable anti forgery

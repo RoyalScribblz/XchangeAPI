@@ -8,16 +8,18 @@ public class StorageBucketService(IMinioClientFactory minioClientFactory) : ISto
 {
     private readonly IMinioClient _minioClient = minioClientFactory.CreateClient();
     
-    public async Task Put(string id, Stream stream, string contentType, CancellationToken cancellationToken = default)
+    public async Task<Guid> Put(Stream stream, string contentType, CancellationToken cancellationToken = default)
     {
+        var id = Guid.NewGuid();
         var putObjectArgs = new PutObjectArgs()
             .WithBucket(Buckets.Xchange)
-            .WithObject(id)
+            .WithObject(id.ToString())
             .WithStreamData(stream)
             .WithObjectSize(stream.Length)
             .WithContentType(contentType);
 
         await _minioClient.PutObjectAsync(putObjectArgs, cancellationToken);
+        return id;
     }
 
     public async Task<(Stream Stream, string ContentType)> Get(string id, CancellationToken cancellationToken = default)

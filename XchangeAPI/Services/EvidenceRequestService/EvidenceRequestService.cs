@@ -8,7 +8,13 @@ public sealed class EvidenceRequestService(XchangeDatabase database) : IEvidence
 {
     public IList<EvidenceRequest> GetEvidenceRequests() => database.EvidenceRequests.ToList();
 
-    public async Task SubmitEvidence(Guid evidenceRequestId, string evidence, CancellationToken cancellationToken)
+    public Task<EvidenceRequest?> GetEvidenceRequest(string userId, CancellationToken cancellationToken) =>
+        database.EvidenceRequests.SingleOrDefaultAsync(e => e.UserId == userId, cancellationToken);
+    
+    public Task<EvidenceRequest?> GetEvidenceRequest(Guid evidenceRequestId, CancellationToken cancellationToken) =>
+        database.EvidenceRequests.SingleOrDefaultAsync(e => e.EvidenceRequestId == evidenceRequestId, cancellationToken);
+
+    public async Task SubmitEvidence(Guid evidenceRequestId, Guid evidenceId, CancellationToken cancellationToken)
     {
         var evidenceRequest = await database.EvidenceRequests.SingleOrDefaultAsync(
             e => e.EvidenceRequestId == evidenceRequestId, cancellationToken);
@@ -18,7 +24,7 @@ public sealed class EvidenceRequestService(XchangeDatabase database) : IEvidence
             return;
         }
 
-        evidenceRequest.Evidence = evidence;
+        evidenceRequest.EvidenceIds.Add(evidenceId);
 
         await database.SaveChangesAsync(cancellationToken);
     }
