@@ -67,11 +67,11 @@ public sealed class AccountService(
 
         if (currency != null && amount >= currency.TransactionLimit)
         {
-            await FreezeUser(userId, cancellationToken);
+            await FreezeUser(userId, currencyId, amount, cancellationToken);
         }
     }
 
-    private async Task FreezeUser(string userId, CancellationToken cancellationToken)
+    private async Task FreezeUser(string userId, Guid currencyId, double amount, CancellationToken cancellationToken)
     {
         var user = await database.Users.SingleOrDefaultAsync(u => u.UserId == userId, cancellationToken);
 
@@ -89,6 +89,8 @@ public sealed class AccountService(
                 UserId = userId,
                 EvidenceIds = [],
                 Status = EvidenceRequestStatus.Active,
+                CurrencyId = currencyId,
+                Amount = amount,
             },
             cancellationToken);
 

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using XchangeAPI.Database.Dtos;
+using XchangeAPI.Endpoints.Contracts;
+using XchangeAPI.Services.CurrencyService;
 using XchangeAPI.Services.EvidenceRequestService;
 using XchangeAPI.Services.StorageBucketService;
 
@@ -10,8 +12,28 @@ public static class EvidenceRequestEndpointExtensions
 {
     public static WebApplication MapEvidenceRequestEndpoints(this WebApplication app)
     {
-        app.MapGet("/evidenceRequests", (IEvidenceRequestService evidenceRequestService) =>
-            TypedResults.Ok(evidenceRequestService.GetEvidenceRequests())).WithTags("EvidenceRequest");
+        app.MapGet("/evidenceRequests", async (
+            IEvidenceRequestService evidenceRequestService,
+            ICurrencyService currencyService,
+            CancellationToken cancellationToken) =>
+        {
+            List<GetEvidenceRequestResponse> response = [];
+            
+            foreach (var evidenceRequest in evidenceRequestService.GetEvidenceRequests())
+            {
+                response.Add(new GetEvidenceRequestResponse
+                {
+                    EvidenceRequestId = evidenceRequest.EvidenceRequestId,
+                    UserId = evidenceRequest.UserId,
+                    EvidenceIds = evidenceRequest.EvidenceIds,
+                    Status = evidenceRequest.Status,
+                    Currency = await currencyService.GetCurrency(evidenceRequest.CurrencyId, cancellationToken),
+                    Amount = evidenceRequest.Amount
+                });
+            }
+
+            return TypedResults.Ok(response);
+        }).WithTags("EvidenceRequest");
 
         app.MapPatch("/evidenceRequest/{evidenceRequestId:Guid}/evidence", async (
             Guid evidenceRequestId,
@@ -39,9 +61,10 @@ public static class EvidenceRequestEndpointExtensions
             return TypedResults.File(data.Stream, data.ContentType);
         }).WithTags("EvidenceRequest");
         
-        app.MapGet("/evidenceRequest", async Task<Results<NotFound, Ok<EvidenceRequest>>>(
+        app.MapGet("/evidenceRequest", async Task<Results<NotFound, Ok<GetEvidenceRequestResponse>>>(
             [FromQuery] string userId,
             IEvidenceRequestService evidenceRequestService,
+            ICurrencyService currencyService,
             CancellationToken cancellationToken) =>
         {
             var evidenceRequest = await evidenceRequestService.GetEvidenceRequest(userId, cancellationToken);
@@ -51,7 +74,17 @@ public static class EvidenceRequestEndpointExtensions
                 return TypedResults.NotFound();
             }
 
-            return TypedResults.Ok(evidenceRequest);
+            var response = new GetEvidenceRequestResponse
+            {
+                EvidenceRequestId = evidenceRequest.EvidenceRequestId,
+                UserId = evidenceRequest.UserId,
+                EvidenceIds = evidenceRequest.EvidenceIds,
+                Status = evidenceRequest.Status,
+                Currency = await currencyService.GetCurrency(evidenceRequest.CurrencyId, cancellationToken),
+                Amount = evidenceRequest.Amount
+            };
+
+            return TypedResults.Ok(response);
         }).WithTags("EvidenceRequest");
 
         app.MapPost("/evidenceRequest/{evidenceRequestId:Guid}/accept", async (

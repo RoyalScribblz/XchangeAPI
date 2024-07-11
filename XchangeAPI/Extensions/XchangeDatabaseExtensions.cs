@@ -64,6 +64,8 @@ public static class XchangeDatabaseExtensions
             UserId = "auth0|65cf6dac8b7a7cb0b5f26732",
             EvidenceIds = [],
             Status = EvidenceRequestStatus.Active,
+            CurrencyId = Guid.Parse("3ca59b04-be8a-4344-90d2-5d78c5009da6"),
+            Amount = 152.16,
         });
 
         await database.SaveChangesAsync();
