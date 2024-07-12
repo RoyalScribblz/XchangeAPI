@@ -1,7 +1,9 @@
+using FluentValidation;
 using Minio;
 using XchangeAPI.Database;
 using XchangeAPI.Database.Dtos;
 using XchangeAPI.Endpoints;
+using XchangeAPI.Endpoints.Validation;
 using XchangeAPI.Extensions;
 using XchangeAPI.Options;
 using XchangeAPI.Services.AccountService;
@@ -46,7 +48,8 @@ builder.Services.AddHttpClient()
     .AddScoped<IEvidenceRequestService, EvidenceRequestService>()
     .AddScoped<IUserService, UserService>()
     .AddScoped<IStorageBucketService, StorageBucketService>()
-    .AddSingleton<IPendingExchangeService, PendingExchangeService>();
+    .AddSingleton<IPendingExchangeService, PendingExchangeService>()
+    .AddTransient<IValidator<CreateAccountRequest>, CreateAccountValidator>();
 
 builder.Services.AddHostedService<StorageBucketSetupService>();
 

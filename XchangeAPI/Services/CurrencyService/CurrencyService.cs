@@ -72,9 +72,9 @@ public sealed class CurrencyService(
         return true;
     }
 
-    public Task<Currency> GetCurrency(Guid currencyId, CancellationToken cancellationToken)
+    public Task<Currency?> GetCurrency(Guid currencyId, CancellationToken cancellationToken)
     {
-        return database.Currencies.SingleAsync(c => c.CurrencyId == currencyId, cancellationToken);
+        return database.Currencies.SingleOrDefaultAsync(c => c.CurrencyId == currencyId, cancellationToken);
     }
 }
 

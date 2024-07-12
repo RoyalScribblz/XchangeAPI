@@ -27,7 +27,7 @@ public static class EvidenceRequestEndpointExtensions
                     UserId = evidenceRequest.UserId,
                     EvidenceIds = evidenceRequest.EvidenceIds,
                     Status = evidenceRequest.Status,
-                    Currency = await currencyService.GetCurrency(evidenceRequest.CurrencyId, cancellationToken),
+                    Currency = (await currencyService.GetCurrency(evidenceRequest.CurrencyId, cancellationToken))!,
                     Amount = evidenceRequest.Amount
                 });
             }
@@ -80,7 +80,7 @@ public static class EvidenceRequestEndpointExtensions
                 UserId = evidenceRequest.UserId,
                 EvidenceIds = evidenceRequest.EvidenceIds,
                 Status = evidenceRequest.Status,
-                Currency = await currencyService.GetCurrency(evidenceRequest.CurrencyId, cancellationToken),
+                Currency = (await currencyService.GetCurrency(evidenceRequest.CurrencyId, cancellationToken))!,
                 Amount = evidenceRequest.Amount
             };
 

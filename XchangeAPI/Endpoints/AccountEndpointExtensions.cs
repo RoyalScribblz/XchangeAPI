@@ -1,7 +1,9 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using XchangeAPI.Database.Dtos;
 using XchangeAPI.Endpoints.Contracts;
+using XchangeAPI.Endpoints.Validation;
 using XchangeAPI.Services.AccountService;
 using XchangeAPI.Services.CurrencyService;
 using XchangeAPI.Services.PendingExchangeService;
@@ -20,8 +22,11 @@ public static class AccountEndpointExtensions
             IAccountService accountService,
             IUserService userService,
             ICurrencyService currencyService,
+            IValidator<CreateAccountRequest> validator,
             CancellationToken cancellationToken) =>
         {
+            await validator.ValidateAndThrowAsync(new CreateAccountRequest(userId, currencyId), cancellationToken);
+            
             var account = await accountService.Create(userId, currencyId, cancellationToken);
 
             if (account == null)
@@ -37,6 +42,11 @@ public static class AccountEndpointExtensions
             }
             
             var currency = await currencyService.GetCurrency(account.CurrencyId, cancellationToken);
+            
+            if (currency == null)
+            {
+                return TypedResults.BadRequest();
+            }
             
             var exchangeRate = await currencyService.GetExchangeRate(
                 currency.CurrencyId, user.LocalCurrencyId, cancellationToken) ?? 0;
@@ -71,8 +81,9 @@ public static class AccountEndpointExtensions
             foreach (var account in accounts)
             {
                 var currency = await currencyService.GetCurrency(account.CurrencyId, cancellationToken);
+                
                 var exchangeRate = await currencyService.GetExchangeRate(
-                    currency.CurrencyId,
+                    currency!.CurrencyId,
                     user.LocalCurrencyId,
                     cancellationToken) ?? 0;
 
@@ -167,7 +178,7 @@ public static class AccountEndpointExtensions
             {
                 var currency = await currencyService.GetCurrency(account.CurrencyId, cancellationToken);
                 var exchangeRate = await currencyService.GetExchangeRate(
-                    currency.CurrencyId,
+                    currency!.CurrencyId,
                     localCurrencyId,
                     cancellationToken) ?? 0;
 
@@ -208,6 +219,11 @@ public static class AccountEndpointExtensions
             
             var currency = await currencyService.GetCurrency(account.CurrencyId, cancellationToken);
             
+            if (currency == null)
+            {
+                return TypedResults.BadRequest();
+            }
+            
             var exchangeRate = await currencyService.GetExchangeRate(
                 currency.CurrencyId, user.LocalCurrencyId, cancellationToken) ?? 0;
 
@@ -244,6 +260,11 @@ public static class AccountEndpointExtensions
             }
             
             var currency = await currencyService.GetCurrency(account.CurrencyId, cancellationToken);
+            
+            if (currency == null)
+            {
+                return TypedResults.BadRequest();
+            }
             
             var exchangeRate = await currencyService.GetExchangeRate(
                 currency.CurrencyId, user.LocalCurrencyId, cancellationToken) ?? 0;

@@ -11,7 +11,7 @@ public static class UserEndpointExtensions
 {
     public static WebApplication MapUserEndpoints(this WebApplication app)
     {
-        app.MapPost("/user", async (
+        app.MapPost("/user", async Task<Results<BadRequest, Ok<GetUserResponse>>>(
             string userId,
             CancellationToken cancellationToken,
             IUserService userService,
@@ -21,6 +21,11 @@ public static class UserEndpointExtensions
 
             var currency = await currencyService.GetCurrency(user.LocalCurrencyId, cancellationToken);
 
+            if (currency == null)
+            {
+                return TypedResults.BadRequest();
+            }
+            
             var response = new GetUserResponse
             {
                 UserId = user.UserId,
@@ -32,7 +37,7 @@ public static class UserEndpointExtensions
             return TypedResults.Ok(response);
         }).WithTags("User");
 
-        app.MapGet("/user/{userId}", async Task<Results<NotFound, Ok<GetUserResponse>>>(
+        app.MapGet("/user/{userId}", async Task<Results<NotFound, BadRequest, Ok<GetUserResponse>>>(
             string userId,
             IUserService userService,
             ICurrencyService currencyService,
@@ -46,6 +51,11 @@ public static class UserEndpointExtensions
             }
 
             var currency = await currencyService.GetCurrency(user.LocalCurrencyId, cancellationToken);
+
+            if (currency == null)
+            {
+                return TypedResults.BadRequest();
+            }
 
             var response = new GetUserResponse
             {
