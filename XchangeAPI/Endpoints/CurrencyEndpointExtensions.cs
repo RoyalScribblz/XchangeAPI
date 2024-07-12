@@ -10,7 +10,7 @@ public static class CurrencyEndpointExtensions
         app.MapGet("/currencies", (ICurrencyService currencyService) =>
             TypedResults.Ok(currencyService.GetCurrencies())).WithTags("Currency");
 
-        app.MapPut("/currency/{currencyId:Guid}/limit", async (
+        app.MapPatch("/currency/{currencyId:Guid}/limit", async (
             Guid currencyId,
             [FromQuery] double amount,
             ICurrencyService currencyService,
