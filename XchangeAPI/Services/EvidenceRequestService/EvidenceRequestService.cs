@@ -8,9 +8,15 @@ public sealed class EvidenceRequestService(XchangeDatabase database) : IEvidence
 {
     public IList<EvidenceRequest> GetEvidenceRequests() => database.EvidenceRequests.ToList();
 
-    public Task<EvidenceRequest?> GetEvidenceRequest(string userId, CancellationToken cancellationToken) =>
-        database.EvidenceRequests.SingleOrDefaultAsync(e => e.UserId == userId, cancellationToken);
-    
+    public Task<EvidenceRequest?> GetEvidenceRequest(string userId, EvidenceRequestStatus? evidenceRequestStatus = null, CancellationToken cancellationToken = default)
+    {
+        return evidenceRequestStatus == null
+            ? database.EvidenceRequests.FirstOrDefaultAsync(
+                e => e.UserId == userId, cancellationToken: cancellationToken)
+            : database.EvidenceRequests.FirstOrDefaultAsync(
+                e => e.UserId == userId && e.Status == evidenceRequestStatus, cancellationToken: cancellationToken);
+    }
+
     public Task<EvidenceRequest?> GetEvidenceRequest(Guid evidenceRequestId, CancellationToken cancellationToken) =>
         database.EvidenceRequests.SingleOrDefaultAsync(e => e.EvidenceRequestId == evidenceRequestId, cancellationToken);
 

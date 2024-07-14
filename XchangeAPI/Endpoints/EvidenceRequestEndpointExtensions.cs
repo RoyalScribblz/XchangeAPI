@@ -65,9 +65,10 @@ public static class EvidenceRequestEndpointExtensions
             [FromQuery] string userId,
             IEvidenceRequestService evidenceRequestService,
             ICurrencyService currencyService,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken,
+            [FromQuery] EvidenceRequestStatus? evidenceRequestStatus = null) =>
         {
-            var evidenceRequest = await evidenceRequestService.GetEvidenceRequest(userId, cancellationToken);
+            var evidenceRequest = await evidenceRequestService.GetEvidenceRequest(userId, evidenceRequestStatus, cancellationToken);
 
             if (evidenceRequest == null)
             {

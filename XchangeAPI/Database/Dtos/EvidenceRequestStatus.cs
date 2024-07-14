@@ -2,7 +2,8 @@ namespace XchangeAPI.Database.Dtos;
 
 public enum EvidenceRequestStatus
 {
-    Active = 0,
-    Rejected = 1,
-    Accepted = 2,
+    Waiting = 0,
+    Active = 1,
+    Rejected = 2,
+    Accepted = 3
 }
