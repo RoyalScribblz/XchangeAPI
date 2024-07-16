@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using Minio;
 using XchangeAPI.Database;
 using XchangeAPI.Database.Dtos;
@@ -16,6 +17,8 @@ using XchangeAPI.Services.UserService;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddEnvironmentVariables();
+
 builder.Services.AddMinio(configureClient => configureClient
     .WithEndpoint(builder.Configuration["minio:endpoint"])
     .WithCredentials(builder.Configuration["minio:accessKey"], builder.Configuration["minio:secretKey"])
@@ -25,7 +28,7 @@ builder.Services.AddMinio(configureClient => configureClient
 builder.Services
     .AddEndpointsApiExplorer()
     .AddSwaggerGen()
-    .AddDbContext<XchangeDatabase>();
+    .AddDbContext<XchangeDatabase>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("XchangeDb")));
 
 builder.Services.AddCors(
     options => options.AddPolicy(
@@ -73,8 +76,14 @@ app.MapAccountEndpoints()
     .MapTestEndpoints();
 
 using var scope = app.Services.CreateScope();
-await scope.ServiceProvider
-    .GetRequiredService<XchangeDatabase>()
-    .Seed(currencies);
+var context = scope.ServiceProvider
+    .GetRequiredService<XchangeDatabase>();
+
+var created = await context.Database.EnsureCreatedAsync();
+
+if (created)
+{
+    await context.Seed(currencies);
+}
 
 await app.RunAsync();

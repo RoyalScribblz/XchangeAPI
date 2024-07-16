@@ -1,0 +1,37 @@
+﻿services:
+  xchangeapi:
+    image: xchangeapi
+    build:
+      context: .
+      dockerfile: XchangeAPI/Dockerfile
+    environment:
+      - OpenExchangeRatesOptions__ApiKey= #OpenExchangeRates api key goes here
+      - minio__secretKey=sLlZnSt6hPrs08wn1t47A9Sh66
+      - minio__endpoint=minio:9000
+      - minio__accessKey=minio1
+      - ConnectionStrings__XchangeDb=Data Source=mssql;Database=XchangeDb;User Id=SA;Password=JZrEhHxPvEABzb9D8dMq70bSO;TrustServerCertificate=true;
+    depends_on:
+      - mssql
+      - minio
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      SA_PASSWORD: "JZrEhHxPvEABzb9D8dMq70bSO"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - ./XChangeDocker/MSSQL/data:/var/opt/mssql
+
+  minio:
+    image: quay.io/minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minio1
+      - MINIO_ROOT_PASSWORD=sLlZnSt6hPrs08wn1t47A9Sh66
+    volumes:
+      - ./XChangeDocker/MinIO/data:/data
+    command: server /data --console-address ":9001"
