@@ -88,7 +88,7 @@ public sealed class AccountService(
                 EvidenceRequestId = Guid.NewGuid(),
                 UserId = userId,
                 EvidenceIds = [],
-                Status = EvidenceRequestStatus.Active,
+                Status = EvidenceRequestStatus.Waiting,
                 CurrencyId = currencyId,
                 Amount = amount,
             },

@@ -47,6 +47,8 @@ public static class EvidenceRequestEndpointExtensions
                 var evidenceId = await storageBucketService.Put(file.OpenReadStream(), file.ContentType, cancellationToken);
                 await evidenceRequestService.SubmitEvidence(evidenceRequestId, evidenceId, cancellationToken);
             }
+
+            await evidenceRequestService.SetActive(evidenceRequestId, cancellationToken);
             
             return TypedResults.Ok();
         }).WithTags("EvidenceRequest").DisableAntiforgery();  // TODO disable antiforgery
@@ -65,10 +67,9 @@ public static class EvidenceRequestEndpointExtensions
             [FromQuery] string userId,
             IEvidenceRequestService evidenceRequestService,
             ICurrencyService currencyService,
-            CancellationToken cancellationToken,
-            [FromQuery] EvidenceRequestStatus? evidenceRequestStatus = null) =>
+            CancellationToken cancellationToken) =>
         {
-            var evidenceRequest = await evidenceRequestService.GetEvidenceRequest(userId, evidenceRequestStatus, cancellationToken);
+            var evidenceRequest = await evidenceRequestService.GetEvidenceRequest(userId, cancellationToken);
 
             if (evidenceRequest == null)
             {

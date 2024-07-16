@@ -8,13 +8,21 @@ public sealed class EvidenceRequestService(XchangeDatabase database) : IEvidence
 {
     public IList<EvidenceRequest> GetEvidenceRequests() => database.EvidenceRequests.ToList();
 
-    public Task<EvidenceRequest?> GetEvidenceRequest(string userId, EvidenceRequestStatus? evidenceRequestStatus = null, CancellationToken cancellationToken = default)
+    public async Task<EvidenceRequest?> GetEvidenceRequest(string userId, CancellationToken cancellationToken = default)
     {
-        return evidenceRequestStatus == null
-            ? database.EvidenceRequests.FirstOrDefaultAsync(
-                e => e.UserId == userId, cancellationToken: cancellationToken)
-            : database.EvidenceRequests.FirstOrDefaultAsync(
-                e => e.UserId == userId && e.Status == evidenceRequestStatus, cancellationToken: cancellationToken);
+        EvidenceRequest? evidenceRequest = await database.EvidenceRequests.FirstOrDefaultAsync(
+            e => e.UserId == userId && e.Status == EvidenceRequestStatus.Rejected, cancellationToken: cancellationToken);
+        
+        evidenceRequest ??= await database.EvidenceRequests.FirstOrDefaultAsync(
+            e => e.UserId == userId && e.Status == EvidenceRequestStatus.Active, cancellationToken: cancellationToken);
+        
+        evidenceRequest ??= await database.EvidenceRequests.FirstOrDefaultAsync(
+            e => e.UserId == userId && e.Status == EvidenceRequestStatus.Waiting, cancellationToken: cancellationToken);
+        
+        evidenceRequest ??= await database.EvidenceRequests.FirstOrDefaultAsync(
+            e => e.UserId == userId && e.Status == EvidenceRequestStatus.Accepted, cancellationToken: cancellationToken);
+
+        return evidenceRequest;
     }
 
     public Task<EvidenceRequest?> GetEvidenceRequest(Guid evidenceRequestId, CancellationToken cancellationToken) =>
@@ -81,6 +89,21 @@ public sealed class EvidenceRequestService(XchangeDatabase database) : IEvidence
         }
 
         user.IsBanned = true;
+
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task SetActive(Guid evidenceRequestId, CancellationToken cancellationToken)
+    {
+        var evidenceRequest = await database.EvidenceRequests.SingleOrDefaultAsync(
+            e => e.EvidenceRequestId == evidenceRequestId, cancellationToken);
+        
+        if (evidenceRequest == null)
+        {
+            return;
+        }
+
+        evidenceRequest.Status = EvidenceRequestStatus.Active;
 
         await database.SaveChangesAsync(cancellationToken);
     }
