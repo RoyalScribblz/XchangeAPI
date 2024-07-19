@@ -25,11 +25,12 @@ public sealed class PendingExchangeService : IPendingExchangeService
 
         _pendingExchanges[userId] = pendingExchange;
         
-        _ = Task.Run(async () =>
-        {
-            await Task.Delay(30000);
-            _pendingExchanges.Remove(userId, out _);
-        });
+        // TODO maybe re-enable expiry if indicator on frontend, or error message to say its expired
+        // _ = Task.Run(async () =>
+        // {
+        //     await Task.Delay(30000);
+        //     _pendingExchanges.Remove(userId, out _);
+        // });
 
         return pendingExchange;
     }
