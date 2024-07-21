@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using XchangeAPI.Database.Dtos;
 using XchangeAPI.Endpoints.Contracts;
+using XchangeAPI.Extensions;
 using XchangeAPI.Services.CurrencyService;
 using XchangeAPI.Services.EvidenceRequestService;
 using XchangeAPI.Services.StorageBucketService;
@@ -33,15 +33,35 @@ public static class EvidenceRequestEndpointExtensions
             }
 
             return TypedResults.Ok(response);
-        }).WithTags("EvidenceRequest");
+        }).RequireAuthorization("RequireAdmin").WithTags("EvidenceRequest");
 
-        app.MapPatch("/evidenceRequest/{evidenceRequestId:Guid}/evidence", async (
+        app.MapPatch("/evidenceRequest/{evidenceRequestId:Guid}/evidence", async Task<Results<UnauthorizedHttpResult, Ok, BadRequest>> (
             Guid evidenceRequestId,
             IFormFileCollection files,
             IEvidenceRequestService evidenceRequestService,
             IStorageBucketService storageBucketService,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken,
+            HttpContext context) =>
         {
+            var userId = context.GetUserId();
+
+            if (userId == null)
+            {
+                return TypedResults.Unauthorized();
+            }
+
+            var evidenceRequest = await evidenceRequestService.GetEvidenceRequest(userId, cancellationToken);
+
+            if (evidenceRequest == null)
+            {
+                return TypedResults.BadRequest();
+            }
+            
+            if (evidenceRequest.EvidenceRequestId != evidenceRequestId)
+            {
+                return TypedResults.Unauthorized();
+            }
+            
             foreach (var file in files)
             {
                 var evidenceId = await storageBucketService.Put(file.OpenReadStream(), file.ContentType, cancellationToken);
@@ -51,7 +71,7 @@ public static class EvidenceRequestEndpointExtensions
             await evidenceRequestService.SetActive(evidenceRequestId, cancellationToken);
             
             return TypedResults.Ok();
-        }).WithTags("EvidenceRequest").DisableAntiforgery();  // TODO disable antiforgery
+        }).RequireAuthorization().WithTags("EvidenceRequest").DisableAntiforgery();
         
         app.MapGet("/evidence/{evidenceId:Guid}", async (
             Guid evidenceId,
@@ -61,14 +81,21 @@ public static class EvidenceRequestEndpointExtensions
             var data = await storageBucketService.Get(evidenceId.ToString(), cancellationToken);
 
             return TypedResults.File(data.Stream, data.ContentType);
-        }).WithTags("EvidenceRequest");
+        }).RequireAuthorization("RequireAdmin").WithTags("EvidenceRequest");
         
-        app.MapGet("/evidenceRequest", async Task<Results<NotFound, Ok<GetEvidenceRequestResponse>>>(
-            [FromQuery] string userId,
+        app.MapGet("/evidenceRequest", async Task<Results<UnauthorizedHttpResult, NotFound, Ok<GetEvidenceRequestResponse>>>(
             IEvidenceRequestService evidenceRequestService,
             ICurrencyService currencyService,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken,
+            HttpContext context) =>
         {
+            var userId = context.GetUserId();
+
+            if (userId == null)
+            {
+                return TypedResults.Unauthorized();
+            }
+            
             var evidenceRequest = await evidenceRequestService.GetEvidenceRequest(userId, cancellationToken);
 
             if (evidenceRequest == null)
@@ -87,7 +114,7 @@ public static class EvidenceRequestEndpointExtensions
             };
 
             return TypedResults.Ok(response);
-        }).WithTags("EvidenceRequest");
+        }).RequireAuthorization().WithTags("EvidenceRequest");
 
         app.MapPost("/evidenceRequest/{evidenceRequestId:Guid}/accept", async (
             Guid evidenceRequestId,
@@ -96,7 +123,7 @@ public static class EvidenceRequestEndpointExtensions
         {
             await evidenceRequestService.AcceptEvidence(evidenceRequestId, cancellationToken);
             return TypedResults.Ok();
-        }).WithTags("EvidenceRequest");
+        }).RequireAuthorization("RequireAdmin").WithTags("EvidenceRequest");
 
         app.MapPost("/evidenceRequest/{evidenceRequestId:Guid}/reject", async (
             Guid evidenceRequestId,
@@ -105,7 +132,7 @@ public static class EvidenceRequestEndpointExtensions
         {
             await evidenceRequestService.RejectEvidence(evidenceRequestId, cancellationToken);
             return TypedResults.Ok();
-        }).WithTags("EvidenceRequest");
+        }).RequireAuthorization("RequireAdmin").WithTags("EvidenceRequest");
 
         return app;
     }

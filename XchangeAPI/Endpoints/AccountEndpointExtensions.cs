@@ -1,9 +1,9 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using XchangeAPI.Database.Dtos;
 using XchangeAPI.Endpoints.Contracts;
 using XchangeAPI.Endpoints.Validation;
+using XchangeAPI.Extensions;
 using XchangeAPI.Services.AccountService;
 using XchangeAPI.Services.CurrencyService;
 using XchangeAPI.Services.PendingExchangeService;
@@ -16,15 +16,22 @@ public static class AccountEndpointExtensions
 {
     public static WebApplication MapAccountEndpoints(this WebApplication app)
     {
-        app.MapPost("/create", async Task<Results<BadRequest, Ok<GetAccountsResponse>>>(
-            [FromQuery] string userId,
+        app.MapPost("/create", async Task<Results<UnauthorizedHttpResult, BadRequest, Ok<GetAccountsResponse>>>(
             [FromQuery] Guid currencyId,
             IAccountService accountService,
             IUserService userService,
             ICurrencyService currencyService,
             IValidator<CreateAccountRequest> validator,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken,
+            HttpContext context) =>
         {
+            var userId = context.GetUserId();
+
+            if (userId == null)
+            {
+                return TypedResults.Unauthorized();
+            }
+            
             await validator.ValidateAndThrowAsync(new CreateAccountRequest(userId, currencyId), cancellationToken);
             
             var account = await accountService.Create(userId, currencyId, cancellationToken);
@@ -59,15 +66,22 @@ public static class AccountEndpointExtensions
                 Balance = account.Balance,
                 LocalValue = exchangeRate * account.Balance,
             });
-        }).WithTags("Account");
+        }).RequireAuthorization().WithTags("Account");
         
-        app.MapGet("/accounts", async Task<Results<BadRequest, Ok<List<GetAccountsResponse>>>>(
-            [FromQuery] string userId,
+        app.MapGet("/accounts", async Task<Results<UnauthorizedHttpResult, BadRequest, Ok<List<GetAccountsResponse>>>>(
             CancellationToken cancellationToken,
             IAccountService accountService,
             ICurrencyService currencyService,
-            IUserService userService) =>
+            IUserService userService,
+            HttpContext context) =>
         {
+            var userId = context.GetUserId();
+
+            if (userId == null)
+            {
+                return TypedResults.Unauthorized();
+            }
+            
             var user = await userService.GetUser(userId, cancellationToken);
 
             if (user == null)
@@ -98,18 +112,25 @@ public static class AccountEndpointExtensions
             }
 
             return TypedResults.Ok(response);
-        }).WithTags("Account");
+        }).RequireAuthorization().WithTags("Account");
 
-        app.MapPost("/exchange/create", async Task<Results<Ok<PendingExchange>, BadRequest>>(
-            [FromQuery] string userId,
+        app.MapPost("/exchange/create", async Task<Results<UnauthorizedHttpResult, Ok<PendingExchange>, BadRequest>>(
             [FromQuery] double amount,
             [FromQuery] Guid fromCurrencyId,
             [FromQuery] Guid toCurrencyId,
             IUserService userService,
             ICurrencyService currencyService,
             IPendingExchangeService pendingExchangeService,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken,
+            HttpContext context) =>
         {
+            var userId = context.GetUserId();
+
+            if (userId == null)
+            {
+                return TypedResults.Unauthorized();
+            }
+            
             if (await userService.IsFrozen(userId, cancellationToken))
             {
                 return TypedResults.BadRequest();
@@ -132,17 +153,24 @@ public static class AccountEndpointExtensions
             }
 
             return TypedResults.Ok(pendingExchange);
-        }).WithTags("Account");
+        }).RequireAuthorization().WithTags("Account");
         
-        app.MapPost("/exchange/complete/{pendingExchangeId:guid}", async Task<Results<Ok<List<GetAccountsResponse>>, BadRequest>>(
+        app.MapPost("/exchange/complete/{pendingExchangeId:guid}", async Task<Results<UnauthorizedHttpResult, Ok<List<GetAccountsResponse>>, BadRequest>>(
             Guid pendingExchangeId,
-            [FromQuery] string userId,
             IAccountService accountService,
             IUserService userService,
             ICurrencyService currencyService,
             IPendingExchangeService pendingExchangeService,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken,
+            HttpContext context) =>
         {
+            var userId = context.GetUserId();
+
+            if (userId == null)
+            {
+                return TypedResults.Unauthorized();
+            }
+            
             if (await userService.IsFrozen(userId, cancellationToken))
             {
                 return TypedResults.BadRequest();
@@ -193,15 +221,16 @@ public static class AccountEndpointExtensions
             }
 
             return TypedResults.Ok(response);
-        }).WithTags("Account");
+        }).RequireAuthorization().WithTags("Account");
 
-        app.MapPatch("/account/{accountId:Guid}/deposit", async Task<Results<BadRequest, Ok<GetAccountsResponse>>>(
+        app.MapPatch("/account/{accountId:Guid}/deposit", async Task<Results<UnauthorizedHttpResult, BadRequest, Ok<GetAccountsResponse>>>(
             Guid accountId,
             [FromQuery] double amount,
             IAccountService accountService,
             ICurrencyService currencyService,
             IUserService userService,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken,
+            HttpContext context) =>
         {
             var account = await accountService.Deposit(accountId, amount, cancellationToken);
 
@@ -209,6 +238,13 @@ public static class AccountEndpointExtensions
             {
                 return TypedResults.BadRequest();
             }
+            
+            var userId = context.GetUserId();
+
+            if (userId == null || account.UserId != userId)
+            {
+                return TypedResults.Unauthorized();
+            }
 
             var user = await userService.GetUser(account.UserId, cancellationToken);
 
@@ -235,15 +271,16 @@ public static class AccountEndpointExtensions
                 Balance = account.Balance,
                 LocalValue = exchangeRate * account.Balance,
             });
-        }).WithTags("Account");
+        }).RequireAuthorization().WithTags("Account");
 
-        app.MapPatch("/account/{accountId:Guid}/withdraw", async Task<Results<BadRequest, Ok<GetAccountsResponse>>>(
+        app.MapPatch("/account/{accountId:Guid}/withdraw", async Task<Results<UnauthorizedHttpResult, BadRequest, Ok<GetAccountsResponse>>>(
             Guid accountId,
             [FromQuery] double amount,
             IAccountService accountService,
             ICurrencyService currencyService,
             IUserService userService,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken,
+            HttpContext context) =>
         {
             var account = await accountService.Withdraw(accountId, amount, cancellationToken);
 
@@ -251,6 +288,13 @@ public static class AccountEndpointExtensions
             {
                 return TypedResults.BadRequest();
             }
+            
+            var userId = context.GetUserId();
+
+            if (userId == null || account.UserId != userId)
+            {
+                return TypedResults.Unauthorized();
+            }
 
             var user = await userService.GetUser(account.UserId, cancellationToken);
 
@@ -277,7 +321,7 @@ public static class AccountEndpointExtensions
                 Balance = account.Balance,
                 LocalValue = exchangeRate * account.Balance,
             });
-        }).WithTags("Account");
+        }).RequireAuthorization().WithTags("Account");
         
         return app;
     }

@@ -1,5 +1,8 @@
+using System.Security.Claims;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Minio;
 using XchangeAPI.Database;
 using XchangeAPI.Database.Dtos;
@@ -16,6 +19,20 @@ using XchangeAPI.Services.StorageBucketSetupService;
 using XchangeAPI.Services.UserService;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+{
+    options.Authority = builder.Configuration["Auth0:Domain"];
+    options.Audience = builder.Configuration["Auth0:Audience"];
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        NameClaimType = ClaimTypes.NameIdentifier
+    };
+    options.RequireHttpsMetadata = false;
+});
+
+builder.Services.AddAuthorization(options => options.AddPolicy("RequireAdmin",
+    policy => policy.RequireRole("Admin")));
 
 builder.Configuration.AddEnvironmentVariables();
 
@@ -67,13 +84,15 @@ if (app.Environment.IsDevelopment())
         .UseCors("LocalDev");
 }
 
+app.UseAuthentication()
+    .UseAuthorization();
+
 app.UseHttpsRedirection();
 
 app.MapAccountEndpoints()
     .MapCurrencyEndpoints()
     .MapEvidenceRequestEndpoints()
-    .MapUserEndpoints()
-    .MapTestEndpoints();
+    .MapUserEndpoints();
 
 using var scope = app.Services.CreateScope();
 var context = scope.ServiceProvider
