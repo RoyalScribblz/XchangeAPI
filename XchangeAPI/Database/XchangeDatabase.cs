@@ -5,11 +5,11 @@ namespace XchangeAPI.Database;
 
 public sealed class XchangeDatabase(DbContextOptions<XchangeDatabase> options) : DbContext(options)
 {
-    public required DbSet<User> Users { get; init; }
+    public DbSet<User> Users { get; init; }
 
-    public required DbSet<Account> Accounts { get; init; }
+    public DbSet<Account> Accounts { get; init; }
 
-    public required DbSet<Currency> Currencies { get; init; }
+    public DbSet<Currency> Currencies { get; init; }
 
-    public required DbSet<EvidenceRequest> EvidenceRequests { get; init; }
+    public DbSet<EvidenceRequest> EvidenceRequests { get; init; }
 }
