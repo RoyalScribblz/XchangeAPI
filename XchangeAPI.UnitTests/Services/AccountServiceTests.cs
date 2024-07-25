@@ -4,17 +4,17 @@ using XchangeAPI.Database;
 using XchangeAPI.Services.AccountService;
 using XchangeAPI.Services.PendingExchangeService.Models;
 
-namespace XchangeAPI.UnitTests;
+namespace XchangeAPI.UnitTests.Services;
 
 public class AccountServiceTests
 {
-    private XchangeDatabase _database = null!;
-    private AccountService _accountService = null!;
+    private XchangeDatabase _database;
+    private AccountService _accountService;
 
     [SetUp]
     public void Setup()
     {
-        DbContextOptionsBuilder<XchangeDatabase> builder = new DbContextOptionsBuilder<XchangeDatabase>();
+        var builder = new DbContextOptionsBuilder<XchangeDatabase>();
         builder.UseInMemoryDatabase("UnitTestDb");
         _database = new XchangeDatabase(builder.Options);
         _accountService = new AccountService(_database);
@@ -31,7 +31,7 @@ public class AccountServiceTests
     public async Task Create_ShouldReturnAccount_WhenAccountDoesNotExist()
     {
         // Arrange
-        var userId = "user1";
+        const string userId = "user1";
         var currencyId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
 
@@ -49,7 +49,7 @@ public class AccountServiceTests
     public async Task Create_ShouldReturnNull_WhenAccountAlreadyExists()
     {
         // Arrange
-        var userId = "user1";
+        const string userId = "user1";
         var currencyId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
 
@@ -66,7 +66,7 @@ public class AccountServiceTests
     public async Task CompleteExchange_ShouldReturnTrue_WhenExchangeIsSuccessful()
     {
         // Arrange
-        var userId = "user1";
+        const string userId = "user1";
         var fromCurrencyId = Guid.NewGuid();
         var toCurrencyId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
@@ -98,7 +98,7 @@ public class AccountServiceTests
     public async Task CompleteExchange_ShouldReturnFalse_WhenFromAccountDoesNotExist()
     {
         // Arrange
-        var userId = "user1";
+        const string userId = "user1";
         var pendingExchange = new PendingExchange
         {
             PendingExchangeId = Guid.NewGuid(),
@@ -120,11 +120,11 @@ public class AccountServiceTests
     public async Task Deposit_ShouldIncreaseBalance_WhenAccountExists()
     {
         // Arrange
-        var userId = "user1";
+        const string userId = "user1";
         var currencyId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
         var account = await _accountService.Create(userId, currencyId, cancellationToken);
-        var amountToDeposit = 100;
+        const int amountToDeposit = 100;
 
         // Act
         var result = await _accountService.Deposit(account!.AccountId, amountToDeposit, cancellationToken);
@@ -138,14 +138,14 @@ public class AccountServiceTests
     public async Task Withdraw_ShouldDecreaseBalance_WhenAccountExists()
     {
         // Arrange
-        var userId = "user1";
+        const string userId = "user1";
         var currencyId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
         var account = await _accountService.Create(userId, currencyId, cancellationToken);
         account!.Balance = 100;
         await _database.SaveChangesAsync(cancellationToken);
 
-        var amountToWithdraw = 50;
+        const int amountToWithdraw = 50;
 
         // Act
         var result = await _accountService.Withdraw(account.AccountId, amountToWithdraw, cancellationToken);
@@ -160,7 +160,7 @@ public class AccountServiceTests
     {
         // Arrange
         var accountId = Guid.NewGuid();
-        var amountToWithdraw = 50;
+        const int amountToWithdraw = 50;
         var cancellationToken = CancellationToken.None;
 
         // Act
@@ -174,7 +174,7 @@ public class AccountServiceTests
     public async Task GetAccounts_ShouldReturnAllAccountsForUser()
     {
         // Arrange
-        var userId = "user1";
+        const string userId = "user1";
         var currencyId1 = Guid.NewGuid();
         var currencyId2 = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;

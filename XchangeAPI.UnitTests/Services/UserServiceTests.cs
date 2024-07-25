@@ -6,13 +6,13 @@ using XchangeAPI.Database.Dtos;
 using XchangeAPI.Services.CurrencyService;
 using XchangeAPI.Services.UserService;
 
-namespace XchangeAPI.UnitTests;
+namespace XchangeAPI.UnitTests.Services;
 
 public class UserServiceTests
 {
-    private XchangeDatabase _database = null!;
-    private ICurrencyService _currencyService = null!;
-    private UserService _userService = null!;
+    private XchangeDatabase _database;
+    private ICurrencyService _currencyService;
+    private UserService _userService;
 
     [SetUp]
     public void Setup()
@@ -29,6 +29,7 @@ public class UserServiceTests
     [TearDown]
     public void TearDown()
     {
+        _database.Database.EnsureDeleted();
         _database.Dispose();
     }
 
@@ -36,7 +37,7 @@ public class UserServiceTests
     public async Task CreateUser_ShouldReturnNewUser_WhenCalled()
     {
         // Arrange
-        var userId = "user1";
+        const string userId = "user1";
         var cancellationToken = CancellationToken.None;
 
         // Act
@@ -54,7 +55,7 @@ public class UserServiceTests
     public async Task GetUser_ShouldReturnUser_WhenUserExists()
     {
         // Arrange
-        var userId = "user1";
+        const string userId = "user1";
         var user = new User
         {
             UserId = userId,
@@ -79,7 +80,7 @@ public class UserServiceTests
     public async Task GetUser_ShouldReturnNull_WhenUserDoesNotExist()
     {
         // Arrange
-        var userId = "nonexistent_user";
+        const string userId = "nonexistent_user";
         var cancellationToken = CancellationToken.None;
 
         // Act
@@ -93,7 +94,7 @@ public class UserServiceTests
     public async Task IsFrozen_ShouldReturnTrue_WhenUserIsFrozen()
     {
         // Arrange
-        var userId = "user1";
+        const string userId = "user1";
         var user = new User
         {
             UserId = userId,
@@ -117,7 +118,7 @@ public class UserServiceTests
     public async Task IsFrozen_ShouldReturnFalse_WhenUserIsNotFrozen()
     {
         // Arrange
-        var userId = "user1";
+        const string userId = "user1";
         var user = new User
         {
             UserId = userId,
@@ -180,7 +181,7 @@ public class UserServiceTests
     public async Task UpdateLocalCurrency_ShouldReturnNull_WhenUserDoesNotExist()
     {
         // Arrange
-        var userId = "nonexistent_user";
+        const string userId = "nonexistent_user";
         var newCurrencyId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
 
@@ -226,7 +227,7 @@ public class UserServiceTests
     public async Task GetLocalCurrencyId_ShouldReturnCurrencyId_WhenUserExists()
     {
         // Arrange
-        var userId = "user1";
+        const string userId = "user1";
         var localCurrencyId = Guid.NewGuid();
         var user = new User
         {
@@ -251,7 +252,7 @@ public class UserServiceTests
     public async Task GetLocalCurrencyId_ShouldReturnEmptyGuid_WhenUserDoesNotExist()
     {
         // Arrange
-        var userId = "nonexistent_user";
+        const string userId = "nonexistent_user";
         var cancellationToken = CancellationToken.None;
 
         // Act

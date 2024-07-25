@@ -4,12 +4,12 @@ using XchangeAPI.Database;
 using XchangeAPI.Database.Dtos;
 using XchangeAPI.Services.EvidenceRequestService;
 
-namespace XchangeAPI.UnitTests;
+namespace XchangeAPI.UnitTests.Services;
 
 public class EvidenceRequestServiceTests
 {
-    private XchangeDatabase _database = null!;
-    private EvidenceRequestService _evidenceRequestService = null!;
+    private XchangeDatabase _database;
+    private EvidenceRequestService _evidenceRequestService;
 
     [SetUp]
     public void Setup()
@@ -39,7 +39,7 @@ public class EvidenceRequestServiceTests
             EvidenceIds = [],
             Status = EvidenceRequestStatus.Waiting,
             CurrencyId = Guid.NewGuid(),
-            Amount = 100.0,
+            Amount = 100,
         };
         var evidenceRequest2 = new EvidenceRequest
         {
@@ -48,7 +48,7 @@ public class EvidenceRequestServiceTests
             EvidenceIds = [],
             Status = EvidenceRequestStatus.Active,
             CurrencyId = Guid.NewGuid(),
-            Amount = 200.0,
+            Amount = 200,
         };
         _database.EvidenceRequests.Add(evidenceRequest1);
         _database.EvidenceRequests.Add(evidenceRequest2);
@@ -67,7 +67,7 @@ public class EvidenceRequestServiceTests
     public async Task GetEvidenceRequestByUserId_ShouldReturnCorrectRequest()
     {
         // Arrange
-        var userId = "user1";
+        const string userId = "user1";
         var evidenceRequest = new EvidenceRequest
         {
             EvidenceRequestId = Guid.NewGuid(),
@@ -75,7 +75,7 @@ public class EvidenceRequestServiceTests
             EvidenceIds = [],
             Status = EvidenceRequestStatus.Active,
             CurrencyId = Guid.NewGuid(),
-            Amount = 100.0,
+            Amount = 100,
         };
         _database.EvidenceRequests.Add(evidenceRequest);
         await _database.SaveChangesAsync();
@@ -102,7 +102,7 @@ public class EvidenceRequestServiceTests
             EvidenceIds = [],
             Status = EvidenceRequestStatus.Waiting,
             CurrencyId = Guid.NewGuid(),
-            Amount = 100.0,
+            Amount = 100,
         };
         _database.EvidenceRequests.Add(evidenceRequest);
         await _database.SaveChangesAsync();
@@ -130,7 +130,7 @@ public class EvidenceRequestServiceTests
             EvidenceIds = [],
             Status = EvidenceRequestStatus.Waiting,
             CurrencyId = Guid.NewGuid(),
-            Amount = 100.0,
+            Amount = 100,
         };
         _database.EvidenceRequests.Add(evidenceRequest);
         await _database.SaveChangesAsync();
@@ -149,7 +149,7 @@ public class EvidenceRequestServiceTests
     {
         // Arrange
         var evidenceRequestId = Guid.NewGuid();
-        var userId = "user1";
+        const string userId = "user1";
         var evidenceRequest = new EvidenceRequest
         {
             EvidenceRequestId = evidenceRequestId,
@@ -157,7 +157,7 @@ public class EvidenceRequestServiceTests
             EvidenceIds = [],
             Status = EvidenceRequestStatus.Waiting,
             CurrencyId = Guid.NewGuid(),
-            Amount = 100.0,
+            Amount = 100,
         };
         var user = new User
         {
@@ -185,7 +185,7 @@ public class EvidenceRequestServiceTests
     {
         // Arrange
         var evidenceRequestId = Guid.NewGuid();
-        var userId = "user1";
+        const string userId = "user1";
         var evidenceRequest = new EvidenceRequest
         {
             EvidenceRequestId = evidenceRequestId,
@@ -193,7 +193,7 @@ public class EvidenceRequestServiceTests
             EvidenceIds = [],
             Status = EvidenceRequestStatus.Waiting,
             CurrencyId = Guid.NewGuid(),
-            Amount = 100.0,
+            Amount = 100,
         };
         var user = new User
         {
@@ -228,7 +228,7 @@ public class EvidenceRequestServiceTests
             EvidenceIds = [],
             Status = EvidenceRequestStatus.Waiting,
             CurrencyId = Guid.NewGuid(),
-            Amount = 100.0,
+            Amount = 100,
         };
         _database.EvidenceRequests.Add(evidenceRequest);
         await _database.SaveChangesAsync();

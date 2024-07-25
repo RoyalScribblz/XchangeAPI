@@ -7,14 +7,14 @@ using XchangeAPI.Database.Dtos;
 using XchangeAPI.Options;
 using XchangeAPI.Services.CurrencyService;
 
-namespace XchangeAPI.UnitTests;
+namespace XchangeAPI.UnitTests.Services;
 
 public class CurrencyServiceTests
 {
-    private XchangeDatabase _database = null!;
-    private IOptions<OpenExchangeRatesOptions> _options = null!;
-    private IHttpClientFactory _httpClientFactory = null!;
-    private CurrencyService _currencyService = null!;
+    private XchangeDatabase _database;
+    private IOptions<OpenExchangeRatesOptions> _options;
+    private IHttpClientFactory _httpClientFactory;
+    private CurrencyService _currencyService;
 
     [SetUp]
     public void Setup()
@@ -49,7 +49,7 @@ public class CurrencyServiceTests
             CurrencyCode = "USD",
             FlagImageUrl = string.Empty,
             Symbol = string.Empty,
-            UsdValue = 1.0,
+            UsdValue = 1,
             TransactionLimit = 0,
         };
         var toCurrency = new Currency
@@ -112,7 +112,7 @@ public class CurrencyServiceTests
             CurrencyCode = "USD",
             FlagImageUrl = string.Empty,
             Symbol = string.Empty,
-            UsdValue = 1.0,
+            UsdValue = 1,
             TransactionLimit = 0,
         };
         _database.Currencies.Add(fromCurrency);
@@ -139,12 +139,12 @@ public class CurrencyServiceTests
             FlagImageUrl = string.Empty,
             Symbol = string.Empty,
             UsdValue = 0,
-            TransactionLimit = 1000.0,
+            TransactionLimit = 1000,
         };
         _database.Currencies.Add(currency);
         await _database.SaveChangesAsync();
 
-        var newLimit = 2000.0;
+        const double newLimit = 2000;
         var cancellationToken = CancellationToken.None;
 
         // Act
@@ -159,7 +159,7 @@ public class CurrencyServiceTests
     public async Task UpdateTransactionLimit_ShouldReturnFalse_WhenCurrencyDoesNotExist()
     {
         // Arrange
-        var newLimit = 2000.0;
+        const double newLimit = 2000;
         var cancellationToken = CancellationToken.None;
 
         // Act
