@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using XchangeAPI.Database;
@@ -12,8 +13,6 @@ namespace XchangeAPI.UnitTests.Services;
 public class CurrencyServiceTests
 {
     private XchangeDatabase _database;
-    private IOptions<OpenExchangeRatesOptions> _options;
-    private IHttpClientFactory _httpClientFactory;
     private CurrencyService _currencyService;
 
     [SetUp]
@@ -23,12 +22,14 @@ public class CurrencyServiceTests
         builder.UseInMemoryDatabase("UnitTestDb");
         _database = new XchangeDatabase(builder.Options);
 
-        _options = Substitute.For<IOptions<OpenExchangeRatesOptions>>();
-        _options.Value.Returns(new OpenExchangeRatesOptions { ApiKey = "test_api_key" });
-
-        _httpClientFactory = Substitute.For<IHttpClientFactory>();
-
-        _currencyService = new CurrencyService(_options, _database, _httpClientFactory);
+        IServiceCollection services = new ServiceCollection();
+        services.AddHttpClient<CurrencyService>();
+        var factory = services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>();
+        
+        _currencyService = new CurrencyService(new OptionsWrapper<OpenExchangeRatesOptions>(new OpenExchangeRatesOptions
+        {
+            ApiKey = "7c47009a92194d19aab4fa73eb8d4af6"
+        }), _database, factory);
     }
 
     [TearDown]
