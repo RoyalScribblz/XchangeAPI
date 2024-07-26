@@ -13,6 +13,8 @@
     depends_on:
       - mssql
       - minio
+    ports:
+      - "5230:8080"
 
   mssql:
     image: mcr.microsoft.com/mssql/server:2022-latest
