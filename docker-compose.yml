@@ -22,7 +22,7 @@
     ports:
       - "1433:1433"
     volumes:
-      - ./XChangeDocker/MSSQL/data:/var/opt/mssql
+      - mssql-data:/var/opt/mssql
 
   minio:
     image: quay.io/minio/minio
@@ -33,5 +33,9 @@
       - MINIO_ROOT_USER=minio1
       - MINIO_ROOT_PASSWORD=sLlZnSt6hPrs08wn1t47A9Sh66
     volumes:
-      - ./XChangeDocker/MinIO/data:/data
+      - minio-data:/data
     command: server /data --console-address ":9001"
+
+volumes:
+  mssql-data:
+  minio-data:
