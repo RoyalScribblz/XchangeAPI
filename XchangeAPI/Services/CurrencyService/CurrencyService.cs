@@ -16,7 +16,7 @@ public sealed class CurrencyService(
 
     public async Task<double?> GetExchangeRate(Guid fromCurrencyId, Guid toCurrencyId, CancellationToken cancellationToken)
     {
-        // TODO re-enable rate updating with: await UpdateExchangeRates(cancellationToken);
+        await UpdateExchangeRates(cancellationToken);
 
         var fromValue = (await database.Currencies.SingleOrDefaultAsync(
             c => c.CurrencyId == fromCurrencyId, cancellationToken))?.UsdValue;
