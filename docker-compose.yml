@@ -5,7 +5,7 @@
       context: .
       dockerfile: XchangeAPI/Dockerfile
     environment:
-      - OpenExchangeRatesOptions__ApiKey= #OpenExchangeRates api key goes here
+      - OpenExchangeRatesOptions__ApiKey=7c47009a92194d19aab4fa73eb8d4af6
       - minio__secretKey=sLlZnSt6hPrs08wn1t47A9Sh66
       - minio__endpoint=minio:9000
       - minio__accessKey=minio1
