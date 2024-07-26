@@ -31,7 +31,7 @@ public sealed class CurrencyService(
     {
         using var httpClient = httpClientFactory.CreateClient();
 
-        if (lastRefreshedTime.AddMinutes(1) < DateTime.UtcNow)
+        if (lastRefreshedTime.AddMinutes(10) < DateTime.UtcNow)
         {
             lastRefreshedTime = DateTime.UtcNow;
             var exchangeRatesResponse = await httpClient.GetFromJsonAsync<OpenExchangeRatesResponse>(
